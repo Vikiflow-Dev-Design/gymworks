@@ -1,12 +1,12 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   theme: {
     container: {
@@ -24,8 +24,8 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#CC9900",
+          foreground: "#000000",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -74,5 +74,5 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
-}
+};
 export default config;
