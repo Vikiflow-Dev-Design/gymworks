@@ -99,15 +99,18 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
                 <MapPin size={20} className="flex-shrink-0 text-primary" />
-                <span>123 Fitness Street, Gym City, GC 12345</span>
+                <span>
+                  HoKF Gardens Plot 794 Ngozi, N Okonjo-Iweala Wy, AMAC, Abuja
+                  900108
+                </span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone size={20} className="flex-shrink-0 text-primary" />
-                <span>+234 9127362006</span>
+                <span>+234 08091482222</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail size={20} className="flex-shrink-0 text-primary" />
-                <span>info@{WEBSITE_NAME.toLowerCase()}.com</span>
+                <span>info@{WEBSITE_NAME?.toLowerCase()}.com</span>
               </li>
             </ul>
           </div>
