@@ -5,8 +5,11 @@ import Navbar from "@/components/layout/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/layout/footer";
 import { WEBSITE_NAME } from "@/lib/utils";
-
+import FirstVisitForm from "@/components/ui/first-visit-form";
+import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
+
+import { ClerkProvider, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
   title: `${WEBSITE_NAME} - Your Fitness Journey Starts Here`,
@@ -27,21 +30,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow pt-16">{children}</main>
-            <Footer />
-          </div>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={inter.className}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ClerkLoading>
+              <div className="h-screen w-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            </ClerkLoading>
+            <ClerkLoaded>
+              <Navbar />
+              <FirstVisitForm />
+              {children}
+              <Footer />
+              <Toaster />
+            </ClerkLoaded>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

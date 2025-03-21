@@ -4,12 +4,64 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import { monthlyPlans, annualPlans, type Plan } from "./data";
 import { formatNaira } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
 import { benefits } from "./benefits/data";
+import { useRouter } from "next/navigation";
+import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import { registerMembership, getUserMemberships } from "../actions/membership";
+import { toast } from "sonner";
+import { getPlans } from "../actions/plans";
+import { useEffect } from "react";
+
+// Define the Plan interface
+interface Plan {
+  _id: string;
+  id: string;
+  name: string;
+  price: number;
+  duration: string;
+  features: string[];
+  popular?: boolean;
+}
+
+// Define the MembershipDocument interface
+interface MembershipDocument {
+  _id: string;
+  // userId: string;
+  planId: string;
+  planName: string;
+  price: number;
+  features: string[];
+  startDate: string;
+  endDate: string;
+  status: string;
+  paymentStatus: string;
+}
+
+// Add skeleton loader component
+const PlanSkeleton = () => (
+  <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden animate-pulse">
+    <div className="p-8">
+      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+      <div className="flex items-baseline mb-8">
+        <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 ml-2"></div>
+      </div>
+      <div className="space-y-4 mb-8">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex items-start gap-2">
+            <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+          </div>
+        ))}
+      </div>
+      <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+    </div>
+  </div>
+);
 
 const durations = [
   { value: "month", label: "Monthly" },
@@ -18,11 +70,77 @@ const durations = [
   { value: "year", label: "Annual" },
 ];
 
-const allPlans = [...monthlyPlans, ...annualPlans];
-
 export default function Membership() {
   const [selectedDuration, setSelectedDuration] = useState<string>("month");
-  const plans = allPlans.filter((plan) => plan.duration === selectedDuration);
+  const [allPlans, setAllPlans] = useState<Plan[]>([]);
+  const [userMemberships, setUserMemberships] = useState<MembershipDocument[]>(
+    []
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useUser();
+  const router = useRouter();
+
+  // Fetch all plans and user memberships once on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [plans, memberships] = await Promise.all([
+          getPlans(),
+          user ? getUserMemberships(user.id) : Promise.resolve([]),
+        ]);
+        setAllPlans(plans);
+        setUserMemberships(memberships);
+      } catch (error) {
+        toast.error("Failed to load membership data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [user?.id]); // Re-fetch when user changes
+
+  // Filter plans based on selected duration
+  const filteredPlans = allPlans.filter(
+    (plan) => plan.duration === selectedDuration
+  );
+
+  const handleMembershipAction = async (planId: string) => {
+    if (!user) {
+      router.push("/auth/sign-in");
+      return;
+    }
+
+    const isRenewal = userMemberships.some(
+      (membership) =>
+        membership.planId === planId && membership.status === "active"
+    );
+
+    try {
+      const result = await registerMembership(planId);
+      if (result.success) {
+        toast.success(
+          isRenewal
+            ? "Membership renewed successfully!"
+            : "Membership activated successfully!"
+        );
+        // Refresh user memberships
+        const updatedMemberships = await getUserMemberships(user.id);
+        setUserMemberships(updatedMemberships);
+      } else {
+        toast.error(
+          result.error ||
+            `Failed to ${isRenewal ? "renew" : "activate"} membership`
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : `Failed to ${isRenewal ? "renew" : "activate"} membership`
+      );
+    }
+  };
 
   return (
     <main className="min-h-screen">
@@ -77,51 +195,63 @@ export default function Membership() {
 
           {/* Plans Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {plans.map((plan) => (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden ${
-                  plan.popular ? "border-2 border-primary" : ""
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute top-4 right-4">
-                    <span className="bg-primary text-white px-3 py-1 rounded-full text-sm">
-                      Popular
-                    </span>
-                  </div>
-                )}
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
-                  <div className="flex items-baseline mb-8">
-                    <span className="text-4xl font-bold">
-                      {formatNaira(plan.price)}
-                    </span>
-                    <span className="text-gray-600 dark:text-gray-400 ml-2">
-                      /{plan.duration}
-                    </span>
-                  </div>
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
+            {isLoading
+              ? // Show skeleton loaders while loading
+                Array.from({ length: 3 }).map((_, index) => (
+                  <PlanSkeleton key={index} />
+                ))
+              : filteredPlans.map((plan) => (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden ${
+                      plan.popular ? "border-2 border-primary" : ""
+                    }`}
                   >
-                    Get Started
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+                    {plan.popular && (
+                      <div className="absolute top-4 right-4">
+                        <span className="bg-primary text-white px-3 py-1 rounded-full text-sm">
+                          Popular
+                        </span>
+                      </div>
+                    )}
+                    <div className="p-8">
+                      <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
+                      <div className="flex items-baseline mb-8">
+                        <span className="text-4xl font-bold">
+                          {formatNaira(plan.price)}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-400 ml-2">
+                          /{plan.duration}
+                        </span>
+                      </div>
+                      <ul className="space-y-4 mb-8">
+                        {plan.features.map((feature, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <Button
+                        className="w-full"
+                        variant={plan.popular ? "default" : "outline"}
+                        onClick={() => handleMembershipAction(plan._id)}
+                      >
+                        {userMemberships.some(
+                          (membership) =>
+                            membership.planId === plan._id &&
+                            membership.status === "active"
+                        )
+                          ? "Renew Plan"
+                          : "Get Started"}
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
           </div>
         </div>
       </section>

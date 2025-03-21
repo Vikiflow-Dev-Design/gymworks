@@ -1,73 +1,73 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
-import { Trash2, Calendar, Clock, User } from 'lucide-react'
-import Link from 'next/link'
-import { toast } from 'sonner'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Trash2, Calendar, Clock, User } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
 
 type Booking = {
-  id: string
-  class_name: string
-  day: string
-  time: string
-  trainer: string
-  status: string
-  booked_at: string
-}
+  id: string;
+  class_name: string;
+  day: string;
+  time: string;
+  trainer: string;
+  status: string;
+  booked_at: string;
+};
 
 export default function MyBookings() {
-  const [bookings, setBookings] = useState<Booking[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch user's bookings
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch('/api/bookings')
-        
+        const response = await fetch("/api/bookings");
+
         if (!response.ok) {
           if (response.status === 401) {
-            setError('Please log in to view your bookings')
-            return
+            setError("Please log in to view your bookings");
+            return;
           }
-          throw new Error('Failed to fetch bookings')
+          throw new Error("Failed to fetch bookings");
         }
-        
-        const data = await response.json()
-        setBookings(data.bookings || [])
-      } catch (err) {
-        setError('An error occurred while fetching your bookings')
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    }
 
-    fetchBookings()
-  }, [])
+        const data = await response.json();
+        setBookings(data.bookings || []);
+      } catch (err) {
+        setError("An error occurred while fetching your bookings");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
 
   // Cancel a booking
   const cancelBooking = async (bookingId: string) => {
     try {
       const response = await fetch(`/api/bookings?id=${bookingId}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to cancel booking')
+        throw new Error("Failed to cancel booking");
       }
 
       // Remove the cancelled booking from state
-      setBookings(bookings.filter(booking => booking.id !== bookingId))
-      toast.success('Class booking cancelled successfully')
+      setBookings(bookings.filter((booking) => booking.id !== bookingId));
+      toast.success("Class booking cancelled successfully");
     } catch (err) {
-      toast.error('Failed to cancel booking')
-      console.error(err)
+      toast.error("Failed to cancel booking");
+      console.error(err);
     }
-  }
+  };
 
   return (
     <main className="min-h-screen">
@@ -105,14 +105,18 @@ export default function MyBookings() {
           ) : error ? (
             <div className="text-center py-12">
               <p className="text-lg text-red-500 mb-6">{error}</p>
-              <Link href="/auth/login">
-                <Button className="bg-primary hover:bg-primary/90">Log In</Button>
+              <Link href="/membership">
+                <Button className="bg-primary hover:bg-primary/90">
+                  Log In
+                </Button>
               </Link>
             </div>
           ) : bookings.length === 0 ? (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold mb-4">No Bookings Found</h2>
-              <p className="text-lg text-gray-600 mb-8">You haven't booked any classes yet.</p>
+              <p className="text-lg text-gray-600 mb-8">
+                You haven't booked any classes yet.
+              </p>
               <Link href="/schedule">
                 <Button className="bg-primary hover:bg-primary/90 text-lg px-8 py-6">
                   Browse Classes
@@ -147,7 +151,7 @@ export default function MyBookings() {
                           {booking.status}
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-5 h-5 text-gray-500" />
@@ -162,10 +166,10 @@ export default function MyBookings() {
                           <span>{booking.trainer}</span>
                         </div>
                       </div>
-                      
+
                       <div className="flex justify-end">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
                           onClick={() => cancelBooking(booking.id)}
                         >
@@ -179,7 +183,7 @@ export default function MyBookings() {
               </div>
             </>
           )}
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -195,5 +199,5 @@ export default function MyBookings() {
         </div>
       </section>
     </main>
-  )
+  );
 }

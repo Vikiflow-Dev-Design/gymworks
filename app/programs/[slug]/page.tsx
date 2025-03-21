@@ -213,50 +213,6 @@ export default function ProgramPage({ params }: { params: { slug: string } }) {
                 ))}
               </ul>
             </motion.div>
-
-            {/* Pricing */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm"
-            >
-              <h3 className="text-xl font-semibold mb-4 flex items-center space-x-2 dark:text-white">
-                <DollarSign className="w-5 h-5" />
-                <span>Pricing</span>
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium dark:text-white">Monthly</span>
-                    <span className="text-2xl font-bold text-primary">
-                      {formatNaira(program.pricing.monthly)}
-                    </span>
-                  </div>
-                  <Button className="w-full">Select Monthly Plan</Button>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium dark:text-white">
-                      Quarterly
-                    </span>
-                    <span className="text-2xl font-bold text-primary">
-                      {formatNaira(program.pricing.quarterly)}
-                    </span>
-                  </div>
-                  <Button className="w-full">Select Quarterly Plan</Button>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium dark:text-white">Yearly</span>
-                    <span className="text-2xl font-bold text-primary">
-                      {formatNaira(program.pricing.yearly)}
-                    </span>
-                  </div>
-                  <Button className="w-full">Select Yearly Plan</Button>
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>

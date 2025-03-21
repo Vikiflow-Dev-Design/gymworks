@@ -171,9 +171,11 @@ export default function TrainerProfile({
             </div>
 
             {/* Book Session Button */}
-            <Button size="lg" className="w-full md:w-auto">
-              Book a Session
-            </Button>
+            <Link href="/membership" className="inline-block">
+              <Button size="lg" className="w-full md:w-auto">
+                Book a Session
+              </Button>
+            </Link>
           </div>
         </motion.div>
       </div>

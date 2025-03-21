@@ -9,7 +9,9 @@ import { cn, WEBSITE_NAME } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Logo from "../icons/logo";
-import AccountDropdown from "../auth/account-dropdown";
+
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import UserProfileDropdown from "../auth/user-profile-dropdown";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -61,9 +63,19 @@ const Navbar = () => {
         <div className="flex items-center space-x-4">
           <EnhancedThemeToggle size="sm" />
           <div className="hidden lg:block">
-            <AccountDropdown />
+            <SignedOut>
+              <div className="flex items-center space-x-2">
+                <Link href="/auth/sign-in">
+                  <Button variant="default" size="sm">
+                    Sign in
+                  </Button>
+                </Link>
+              </div>
+            </SignedOut>
+            <SignedIn>
+              <UserProfileDropdown />
+            </SignedIn>
           </div>
-
           {/* Mobile Menu Button */}
           <button
             className="lg:hidden"
@@ -102,7 +114,23 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="py-2">
-                <AccountDropdown />
+                <SignedOut>
+                  <div className="flex flex-col space-y-2">
+                    <SignInButton mode="modal">
+                      <Button variant="ghost" className="w-full" size="sm">
+                        Sign in
+                      </Button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <Button variant="default" className="w-full" size="sm">
+                        Sign up
+                      </Button>
+                    </SignUpButton>
+                  </div>
+                </SignedOut>
+                <SignedIn>
+                  <UserProfileDropdown />
+                </SignedIn>
               </div>
             </div>
           </motion.div>
