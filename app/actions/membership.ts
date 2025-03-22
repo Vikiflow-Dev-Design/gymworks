@@ -5,6 +5,7 @@ import Membership from "@/lib/mongodb/models/Membership";
 import Plan from "@/lib/mongodb/models/Plan";
 import { Types } from "mongoose";
 import { auth } from "@clerk/nextjs/server";
+import { ObjectId } from "mongodb";
 
 interface PlanDocument {
   _id: Types.ObjectId;
@@ -44,24 +45,37 @@ interface SerializedMembership {
   renewedFrom?: string;
 }
 
+// Helper function to serialize MongoDB document
+const serializeMembership = (membership: any) => {
+  if (!membership) return null;
+  return {
+    ...membership.toJSON(),
+    _id: membership._id.toString(),
+    planId: membership.planId.toString(),
+    userId: membership.userId.toString(),
+    createdAt: membership.createdAt.toISOString(),
+    updatedAt: membership.updatedAt.toISOString(),
+  };
+};
+
 // Function to check if user has an active membership for a plan
-async function checkMembership(userId: string, planId: string) {
+export async function checkMembership(userId: string, planId: string) {
   try {
-    const membership = (await Membership.findOne({
+    await connect();
+    const membership = await Membership.findOne({
       userId,
       planId,
       status: "active",
-    }).lean()) as MembershipDocument | null;
-
-    return membership;
+    });
+    return serializeMembership(membership);
   } catch (error) {
     console.error("Error checking membership:", error);
-    throw error;
+    return null;
   }
 }
 
 // Function to update/renew membership
-async function updateMembership(
+export async function updateMembership(
   existingMembership: MembershipDocument,
   selectedPlan: PlanDocument
 ) {
@@ -210,32 +224,14 @@ export async function registerMembership(planId: string) {
   }
 }
 
-export async function getUserMemberships(
-  userId: string
-): Promise<SerializedMembership[]> {
-  await connect();
-
+export async function getUserMemberships(userId: string) {
   try {
-    const memberships = (await Membership.find({ userId })
-      .lean()
-      .exec()) as unknown as MembershipDocument[];
-
-    // Return serialized data
-    return memberships.map((membership) => ({
-      _id: membership._id.toString(),
-      userId: membership.userId,
-      planId: membership.planId.toString(),
-      planName: membership.planName,
-      price: membership.price,
-      features: membership.features,
-      startDate: membership.startDate.toISOString(),
-      endDate: membership.endDate.toISOString(),
-      status: membership.status,
-      paymentStatus: membership.paymentStatus,
-    }));
+    await connect();
+    const memberships = await Membership.find({ userId });
+    return memberships.map(serializeMembership);
   } catch (error) {
-    console.error("Error fetching user memberships:", error);
-    throw new Error("Failed to fetch user memberships");
+    console.error("Error getting user memberships:", error);
+    return [];
   }
 }
 

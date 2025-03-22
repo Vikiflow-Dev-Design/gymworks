@@ -90,8 +90,6 @@ export default function AdminDashboard() {
     }
   };
 
-  console.log(users);
-
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"users" | "submissions">("users");
 

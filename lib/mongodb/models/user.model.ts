@@ -1,7 +1,32 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
-const userSchema = new mongoose.Schema(
+export interface IUser extends Document {
+  clerkId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  avatar: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const userSchema = new Schema<IUser>(
   {
+    clerkId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
     firstName: {
       type: String,
       required: true,
@@ -10,41 +35,39 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    email: {
+    username: {
       type: String,
       required: true,
-      unique: true,
     },
-    membershipStatus: {
-      type: String,
-      enum: ["active", "inactive", "trial"],
-      default: "inactive",
-    },
-    clerkId: {
+    avatar: {
       type: String,
       required: true,
-      unique: true,
     },
-    phone: String,
-    address: String,
-    city: String,
-    state: String,
-    postalCode: String,
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    phone: {
+      type: String,
+      required: false,
     },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
+    address: {
+      type: String,
+      required: false,
+    },
+    city: {
+      type: String,
+      required: false,
+    },
+    state: {
+      type: String,
+      required: false,
+    },
+    postalCode: {
+      type: Number,
+      required: false,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 // Check if the model exists before creating it
-const User = mongoose.models.User || mongoose.model("User", userSchema);
+const User = mongoose.models.User || mongoose.model<IUser>("User", userSchema);
 
 export default User;

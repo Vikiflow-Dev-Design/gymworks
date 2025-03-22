@@ -97,6 +97,10 @@ export async function deleteUser(clerkId: string) {
 
     await clerkClient.users.deleteUser(clerkId);
 
+    const clerk_client = await clerkClient();
+
+    console.log("clerkClient......................", clerk_client);
+
     return { success: true };
   } catch (error) {
     console.error("Failed to delete user:", error);

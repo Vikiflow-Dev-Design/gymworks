@@ -50,14 +50,11 @@ export async function updateProfile(formData: {
   state?: string;
   postalCode?: string;
 }) {
-  console.log(formData);
   try {
     const user = await currentUser();
     if (!user) {
       throw new Error("Unauthorized");
     }
-
-    console.log(user.id);
 
     await connect();
     const updatedUser = await User.findOneAndUpdate(
@@ -77,8 +74,6 @@ export async function updateProfile(formData: {
     if (!updatedUser) {
       throw new Error("User not found");
     }
-
-    console.log(updatedUser);
 
     const serializedUser = JSON.parse(JSON.stringify(updatedUser));
     return {

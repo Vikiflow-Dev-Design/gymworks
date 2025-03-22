@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { formatNaira } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -11,10 +11,13 @@ import Image from "next/image";
 import { benefits } from "./benefits/data";
 import { useRouter } from "next/navigation";
 import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
-import { registerMembership, getUserMemberships } from "../actions/membership";
+import {
+  registerMembership,
+  getUserMemberships,
+  checkMembership,
+} from "../actions/membership";
 import { toast } from "sonner";
 import { getPlans } from "../actions/plans";
-import { useEffect } from "react";
 
 // Define the Plan interface
 interface Plan {
@@ -71,76 +74,94 @@ const durations = [
 ];
 
 export default function Membership() {
+  const { user, isLoaded, isSignedIn } = useUser();
   const [selectedDuration, setSelectedDuration] = useState<string>("month");
   const [allPlans, setAllPlans] = useState<Plan[]>([]);
   const [userMemberships, setUserMemberships] = useState<MembershipDocument[]>(
     []
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const { user } = useUser();
+  const [loading, setLoading] = useState(true);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [activeMemberships, setActiveMemberships] = useState({});
   const router = useRouter();
 
-  // Fetch all plans and user memberships once on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
+    async function fetchData() {
       try {
-        const [plans, memberships] = await Promise.all([
-          getPlans(),
-          user ? getUserMemberships(user.id) : Promise.resolve([]),
-        ]);
-        setAllPlans(plans);
-        setUserMemberships(memberships);
+        const plansData = await getPlans();
+        setAllPlans(plansData);
+
+        if (isSignedIn && user) {
+          // Check active memberships for each plan
+          const membershipsMap = {};
+          for (const plan of plansData) {
+            const membership = await checkMembership(user.id, plan._id);
+            if (membership) {
+              membershipsMap[plan._id] = membership;
+            }
+          }
+          setActiveMemberships(membershipsMap);
+        }
       } catch (error) {
-        toast.error("Failed to load membership data");
+        console.error("Error fetching plans:", error);
+        toast.error("Failed to load membership plans");
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    };
+    }
+
     fetchData();
-  }, [user?.id]); // Re-fetch when user changes
+  }, [isSignedIn, user]);
 
   // Filter plans based on selected duration
   const filteredPlans = allPlans.filter(
     (plan) => plan.duration === selectedDuration
   );
 
-  const handleMembershipAction = async (planId: string) => {
-    if (!user) {
-      router.push("/auth/sign-in");
+  const handleSubscribe = async (planId: string) => {
+    if (!isSignedIn) {
+      router.push("/sign-in");
       return;
     }
 
-    const isRenewal = userMemberships.some(
-      (membership) =>
-        membership.planId === planId && membership.status === "active"
-    );
-
     try {
-      const result = await registerMembership(planId);
-      if (result.success) {
-        toast.success(
-          isRenewal
-            ? "Membership renewed successfully!"
-            : "Membership activated successfully!"
-        );
-        // Refresh user memberships
-        const updatedMemberships = await getUserMemberships(user.id);
-        setUserMemberships(updatedMemberships);
-      } else {
-        toast.error(
-          result.error ||
-            `Failed to ${isRenewal ? "renew" : "activate"} membership`
-        );
+      setProcessingPayment(true);
+
+      const response = await fetch("/api/payment/initialize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-email": user.emailAddresses[0].emailAddress,
+        },
+        body: JSON.stringify({ planId }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "Payment initialization failed");
       }
+
+      // Redirect to Paystack payment page
+      window.location.href = data.data.authorizationUrl;
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : `Failed to ${isRenewal ? "renew" : "activate"} membership`
-      );
+      console.error("Payment error:", error);
+      toast.error("Failed to process payment");
+      setProcessingPayment(false);
     }
   };
+
+  if (!isLoaded || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-24">
+        <div className="container px-4 mx-auto">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen">
@@ -195,63 +216,78 @@ export default function Membership() {
 
           {/* Plans Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {isLoading
-              ? // Show skeleton loaders while loading
-                Array.from({ length: 3 }).map((_, index) => (
-                  <PlanSkeleton key={index} />
-                ))
-              : filteredPlans.map((plan) => (
-                  <motion.div
-                    key={plan.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden ${
-                      plan.popular ? "border-2 border-primary" : ""
-                    }`}
-                  >
-                    {plan.popular && (
-                      <div className="absolute top-4 right-4">
-                        <span className="bg-primary text-white px-3 py-1 rounded-full text-sm">
-                          Popular
-                        </span>
-                      </div>
-                    )}
-                    <div className="p-8">
-                      <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
-                      <div className="flex items-baseline mb-8">
-                        <span className="text-4xl font-bold">
-                          {formatNaira(plan.price)}
-                        </span>
-                        <span className="text-gray-600 dark:text-gray-400 ml-2">
-                          /{plan.duration}
-                        </span>
-                      </div>
-                      <ul className="space-y-4 mb-8">
-                        {plan.features.map((feature, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <Button
-                        className="w-full"
-                        variant={plan.popular ? "default" : "outline"}
-                        onClick={() => handleMembershipAction(plan._id)}
+            {filteredPlans.map((plan) => (
+              <motion.div
+                key={plan._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className={`bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border-2 ${
+                  plan.popular ? "border-primary" : "border-transparent"
+                }`}
+              >
+                {plan.popular && (
+                  <span className="bg-primary/10 text-primary text-sm font-medium px-3 py-1 rounded-full">
+                    Most Popular
+                  </span>
+                )}
+
+                <h3 className="text-2xl font-bold mt-4 dark:text-white">
+                  {plan.name}
+                </h3>
+
+                <div className="mt-2 mb-6">
+                  <span className="text-4xl font-bold dark:text-white">
+                    ₦{plan.price.toLocaleString()}
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400">
+                    /{plan.duration}
+                  </span>
+                </div>
+
+                <ul className="space-y-3 mb-6">
+                  {plan.features.map((feature: string, index: number) => (
+                    <li
+                      key={index}
+                      className="flex items-center text-gray-600 dark:text-gray-300"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-3 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        {userMemberships.some(
-                          (membership) =>
-                            membership.planId === plan._id &&
-                            membership.status === "active"
-                        )
-                          ? "Renew Plan"
-                          : "Get Started"}
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={processingPayment}
+                  onClick={() => handleSubscribe(plan._id)}
+                >
+                  {processingPayment ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : activeMemberships[plan._id] ? (
+                    "Renew Plan"
+                  ) : (
+                    "Get Started"
+                  )}
+                </Button>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
