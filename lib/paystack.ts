@@ -63,7 +63,8 @@ export async function initializePayment({
           amount,
           metadata,
           reference,
-          callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/verify`,
+          callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/verify`,
+          channels: ["card"],
         }),
       }
     );
