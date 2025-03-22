@@ -10,6 +10,8 @@ import { verifyPayment } from "@/lib/paystack";
 import Transaction from "@/lib/mongodb/models/Transaction";
 import Membership from "@/lib/mongodb/models/Membership";
 
+export const dynamic = "force-dynamic"; // This makes the route fully dynamic
+
 /**
  * GET handler for payment verification
  * @route GET /api/payment/verify
@@ -18,15 +20,16 @@ import Membership from "@/lib/mongodb/models/Membership";
  */
 export async function GET(request: Request) {
   try {
-    // Extract reference from URL parameters
     const { searchParams } = new URL(request.url);
     const reference = searchParams.get("reference");
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!reference) {
-      return NextResponse.redirect("/payment/failed?error=no_reference");
+      return NextResponse.redirect(
+        `${baseUrl}/payment/failed?error=no_reference`
+      );
     }
 
-    // Connect to database
     await connect();
 
     // Verify payment with Paystack
@@ -36,7 +39,7 @@ export async function GET(request: Request) {
     const transaction = await Transaction.findOne({ reference });
     if (!transaction) {
       return NextResponse.redirect(
-        "/payment/failed?error=transaction_not_found"
+        `${baseUrl}/payment/failed?error=transaction_not_found`
       );
     }
 
@@ -54,14 +57,19 @@ export async function GET(request: Request) {
         await membership.save();
       }
 
-      return NextResponse.redirect("/payment/success?reference=" + reference);
+      return NextResponse.redirect(
+        `${baseUrl}/payment/success?reference=${reference}`
+      );
     } else {
       return NextResponse.redirect(
-        "/payment/failed?error=payment_failed&reference=" + reference
+        `${baseUrl}/payment/failed?error=payment_failed&reference=${reference}`
       );
     }
   } catch (error) {
     console.error("Payment verification error:", error);
-    return NextResponse.redirect("/payment/failed?error=verification_failed");
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    return NextResponse.redirect(
+      `${baseUrl}/payment/failed?error=verification_failed`
+    );
   }
 }
