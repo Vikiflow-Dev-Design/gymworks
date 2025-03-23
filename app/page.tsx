@@ -5,15 +5,7 @@ import Trainers from "@/components/sections/trainers";
 import Testimonials from "@/components/sections/testimonials";
 import MotivationCTA from "@/components/sections/motivation-cta";
 
-import { clerkClient } from "@clerk/nextjs/server";
-
 export default async function Home() {
-  const clerk_client = await clerkClient();
-
-  const users = await clerk_client.users.getUserList();
-
-  console.log(users);
-
   return (
     <main>
       <Hero />

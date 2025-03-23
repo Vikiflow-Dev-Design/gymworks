@@ -9,8 +9,32 @@ import { connect } from "@/lib/mongodb/connectDB";
 import { verifyPayment } from "@/lib/paystack";
 import Transaction from "@/lib/mongodb/models/Transaction";
 import Membership from "@/lib/mongodb/models/Membership";
+import Plan from "@/lib/mongodb/models/Plan";
 
 export const dynamic = "force-dynamic"; // This makes the route fully dynamic
+
+function calculateEndDate(startDate: Date, duration: string): Date {
+  const endDate = new Date(startDate);
+
+  switch (duration) {
+    case "month":
+      endDate.setMonth(endDate.getMonth() + 1);
+      break;
+    case "3 months":
+      endDate.setMonth(endDate.getMonth() + 3);
+      break;
+    case "6 months":
+      endDate.setMonth(endDate.getMonth() + 6);
+      break;
+    case "year":
+      endDate.setFullYear(endDate.getFullYear() + 1);
+      break;
+    default:
+      throw new Error("Invalid duration");
+  }
+
+  return endDate;
+}
 
 /**
  * GET handler for payment verification
@@ -52,9 +76,26 @@ export async function GET(request: Request) {
       // Update membership status if payment was successful
       const membership = await Membership.findById(transaction.membershipId);
       if (membership) {
+        // Get the plan to calculate new end date
+        const plan = await Plan.findById(membership.planId);
+        if (!plan) {
+          return NextResponse.redirect(
+            `${baseUrl}/payment/failed?error=plan_not_found`
+          );
+        }
+
+        // Set new dates
+        const startDate = new Date();
+        const endDate = calculateEndDate(startDate, plan.duration);
+
+        // Update membership
+        membership.startDate = startDate;
+        membership.endDate = endDate;
         membership.status = "active";
         membership.paymentStatus = "paid";
         await membership.save();
+
+        console.log(`Membership renewed: Start: ${startDate}, End: ${endDate}`);
       }
 
       return NextResponse.redirect(

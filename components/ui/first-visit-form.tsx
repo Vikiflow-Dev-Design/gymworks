@@ -9,6 +9,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
+import { createFreeTrialRequest } from "@/app/actions/freeTrialRequest";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -19,21 +22,23 @@ import {
 } from "./form";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  phone: z.string().optional(),
-  fitnessGoals: z
-    .string()
-    .min(10, "Please tell us a bit more about your goals"),
+  phone: z.string().min(6, "Phone number is required"),
+  fitnessGoals: z.string().optional(),
 });
 
 const FirstVisitForm = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isSignedIn } = useUser();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       fitnessGoals: "",
@@ -41,6 +46,13 @@ const FirstVisitForm = () => {
   });
 
   useEffect(() => {
+    // If user is signed in, set hasVisited to true
+    if (isSignedIn) {
+      localStorage.setItem("hasVisited", "true");
+      return;
+    }
+
+    // For non-signed in users, check hasVisited status
     const hasVisited = localStorage.getItem("hasVisited");
     if (!hasVisited) {
       const timer = setTimeout(() => {
@@ -48,12 +60,25 @@ const FirstVisitForm = () => {
       }, 3000); // Show after 3 seconds
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isSignedIn]); // Add isSignedIn as dependency
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Here you would typically send the form data to your backend
-      console.log(values);
+      const response = await createFreeTrialRequest(values);
+
+      if (!response.success) {
+        // If user has already requested, set hasVisited and close form
+        if (response.error?.includes("already requested")) {
+          localStorage.setItem("hasVisited", "true");
+          setIsOpen(false);
+          toast.info(
+            "You've already requested a trial class. Check out our membership plans!"
+          );
+          router.push("/membership");
+          return;
+        }
+        throw new Error(response.error);
+      }
 
       // Save visit status
       localStorage.setItem("hasVisited", "true");
@@ -63,8 +88,11 @@ const FirstVisitForm = () => {
 
       toast.success("Thank you for your interest! We'll be in touch soon.");
       form.reset();
-    } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+
+      // Redirect to membership page
+      router.push("/membership");
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -92,25 +120,47 @@ const FirstVisitForm = () => {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-4"
                 >
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm dark:text-white">
-                          Name
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Your name"
-                            {...field}
-                            className="h-10 text-sm transition-colors focus:ring-2 focus:ring-primary/20"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm dark:text-white">
+                            First Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="First name"
+                              {...field}
+                              className="h-10 text-sm transition-colors focus:ring-2 focus:ring-primary/20"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm dark:text-white">
+                            Last Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Last name"
+                              {...field}
+                              className="h-10 text-sm transition-colors focus:ring-2 focus:ring-primary/20"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
@@ -139,7 +189,7 @@ const FirstVisitForm = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm dark:text-white">
-                          Phone (Optional)
+                          Phone
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -160,7 +210,7 @@ const FirstVisitForm = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm dark:text-white">
-                          What are your fitness goals?
+                          What are your fitness goals? (Optional)
                         </FormLabel>
                         <FormControl>
                           <Textarea
