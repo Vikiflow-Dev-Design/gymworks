@@ -68,7 +68,9 @@ export async function GET(request: Request) {
     }
 
     // Update transaction with verification result
-    transaction.status = paymentData.status;
+    console.log("paymentData", paymentData.status);
+    transaction.status =
+      paymentData.status === "success" ? "success" : "failed";
     transaction.paymentResponse = paymentData;
     await transaction.save();
 
@@ -102,6 +104,13 @@ export async function GET(request: Request) {
         `${baseUrl}/payment/success?reference=${reference}`
       );
     } else {
+      // Update membership payment status to reflect failed payment
+      const membership = await Membership.findById(transaction.membershipId);
+      if (membership) {
+        membership.paymentStatus = "failed";
+        await membership.save();
+      }
+
       return NextResponse.redirect(
         `${baseUrl}/payment/failed?error=payment_failed&reference=${reference}`
       );

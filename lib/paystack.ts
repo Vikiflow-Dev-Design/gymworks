@@ -64,7 +64,14 @@ export async function initializePayment({
           metadata,
           reference,
           callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/verify`,
-          channels: ["card"],
+          channels: [
+            "card",
+            "bank",
+            "ussd",
+            "qr",
+            "bank_transfer",
+            "mobile_money",
+          ],
         }),
       }
     );

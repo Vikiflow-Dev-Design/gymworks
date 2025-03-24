@@ -11,7 +11,6 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { createFreeTrialRequest } from "@/app/actions/freeTrialRequest";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -32,7 +31,6 @@ const formSchema = z.object({
 const FirstVisitForm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isSignedIn } = useUser();
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,7 +72,6 @@ const FirstVisitForm = () => {
           toast.info(
             "You've already requested a trial class. Check out our membership plans!"
           );
-          router.push("/membership");
           return;
         }
         throw new Error(response.error);
@@ -88,9 +85,6 @@ const FirstVisitForm = () => {
 
       toast.success("Thank you for your interest! We'll be in touch soon.");
       form.reset();
-
-      // Redirect to membership page
-      router.push("/membership");
     } catch (error: any) {
       toast.error(error.message || "Something went wrong. Please try again.");
     }

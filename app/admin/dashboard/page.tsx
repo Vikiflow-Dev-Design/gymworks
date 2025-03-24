@@ -16,12 +16,23 @@ import {
   Dumbbell,
   Bell,
 } from "lucide-react";
-import { mockFormSubmissions } from "@/data/dashboard";
 import type { User } from "@/types/user";
 import type { DashboardStats } from "@/data/dashboard";
 import Link from "next/link";
 import { getUsers, getDashboardStats } from "@/app/actions/users";
+import { getFreeTrialRequests } from "@/app/actions/freeTrialRequest";
 import { toast } from "sonner";
+import { format } from "date-fns";
+
+interface FreeTrialRequest {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  fitnessGoals?: string;
+  createdAt: string;
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -33,61 +44,86 @@ export default function AdminDashboard() {
     formSubmissions: 0,
   });
   const [users, setUsers] = useState<User[]>([]);
+  const [freeTrialRequests, setFreeTrialRequests] = useState<
+    FreeTrialRequest[]
+  >([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [submissionSearchQuery, setSubmissionSearchQuery] = useState("");
-  const [selectedSubmissionStatus, setSelectedSubmissionStatus] =
-    useState<string>("all");
-
-  const submissionStatusOptions = [
-    { value: "all", label: "All Submissions" },
-    { value: "pending", label: "Pending" },
-    { value: "contacted", label: "Contacted" },
-    { value: "scheduled", label: "Scheduled" },
-  ];
-
-  const filteredSubmissions = mockFormSubmissions.filter((submission) => {
-    const matchesStatus =
-      selectedSubmissionStatus === "all" ||
-      submission.status === selectedSubmissionStatus;
-    const matchesSearch =
-      submissionSearchQuery.trim() === "" ||
-      submission.name
-        .toLowerCase()
-        .includes(submissionSearchQuery.toLowerCase()) ||
-      submission.email
-        .toLowerCase()
-        .includes(submissionSearchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
+  const [loading, setLoading] = useState({
+    stats: true,
+    users: true,
+    trials: true,
   });
+  const [errors, setErrors] = useState({
+    stats: null as string | null,
+    users: null as string | null,
+    trials: null as string | null,
+  });
+  const [submissionSearchQuery, setSubmissionSearchQuery] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [dashboardStats, usersData] = await Promise.all([
-        getDashboardStats(),
-        getUsers(),
-      ]);
+    // Reset loading states
+    setLoading({ stats: true, users: true, trials: true });
+    setErrors({ stats: null, users: null, trials: null });
 
-      if (!dashboardStats || !usersData) {
-        throw new Error("Failed to fetch dashboard data");
-      }
+    // Fetch dashboard stats
+    getDashboardStats()
+      .then((dashboardStats) => {
+        setStats(dashboardStats);
+      })
+      .catch((error) => {
+        console.error("Error fetching dashboard stats:", error);
+        setErrors((prev) => ({
+          ...prev,
+          stats: "Failed to load dashboard statistics",
+        }));
+        toast.error("Failed to load dashboard statistics");
+      })
+      .finally(() => {
+        setLoading((prev) => ({ ...prev, stats: false }));
+      });
 
-      setStats(dashboardStats);
-      setUsers(usersData.users);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      setError("Failed to load dashboard data. Please try again later.");
-      toast.error("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
+    // Fetch users
+    getUsers()
+      .then((usersData) => {
+        if (usersData) {
+          setUsers(usersData.users);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching users:", error);
+        setErrors((prev) => ({ ...prev, users: "Failed to load user data" }));
+        toast.error("Failed to load user data");
+      })
+      .finally(() => {
+        setLoading((prev) => ({ ...prev, users: false }));
+      });
+
+    // Fetch free trial requests
+    getFreeTrialRequests()
+      .then((trialRequestsData) => {
+        if (trialRequestsData.success) {
+          setFreeTrialRequests(trialRequestsData.data);
+          setStats((prev) => ({
+            ...prev,
+            formSubmissions: trialRequestsData.data.length,
+          }));
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching free trial requests:", error);
+        setErrors((prev) => ({
+          ...prev,
+          trials: "Failed to load free trial requests",
+        }));
+        toast.error("Failed to load free trial requests");
+      })
+      .finally(() => {
+        setLoading((prev) => ({ ...prev, trials: false }));
+      });
   };
 
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -112,13 +148,15 @@ export default function AdminDashboard() {
     return matchesStatus && matchesSearch;
   });
 
-  const statusColors = {
-    pending:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-    contacted: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-    scheduled:
-      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  };
+  // Filter free trial requests
+  const filteredRequests = freeTrialRequests.filter((request) => {
+    const fullName = `${request.firstName} ${request.lastName}`.toLowerCase();
+    const matchesSearch =
+      submissionSearchQuery.trim() === "" ||
+      fullName.includes(submissionSearchQuery.toLowerCase()) ||
+      request.email.toLowerCase().includes(submissionSearchQuery.toLowerCase());
+    return matchesSearch;
+  });
 
   const StatCard = ({
     title,
@@ -158,10 +196,10 @@ export default function AdminDashboard() {
     router.push(`/admin/dashboard?tab=${tab}`);
   };
 
-  if (error) {
+  if (errors.stats) {
     return (
       <div className="p-8 text-center">
-        <div className="text-red-500 mb-4">{error}</div>
+        <div className="text-red-500 mb-4">{errors.stats}</div>
         <Button onClick={fetchDashboardData}>Retry</Button>
       </div>
     );
@@ -179,30 +217,41 @@ export default function AdminDashboard() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard
-              title="Total Users"
-              value={stats.totalUsers}
-              icon={Users}
-              color="bg-blue-50 dark:bg-blue-900/20"
-            />
-            <StatCard
-              title="Active Members"
-              value={stats.activeMembers}
-              icon={CreditCard}
-              color="bg-green-50 dark:bg-green-900/20"
-            />
-            <StatCard
-              title="Trial Users"
-              value={stats.trialUsers}
-              icon={FileText}
-              color="bg-yellow-50 dark:bg-yellow-900/20"
-            />
-            <StatCard
-              title="Form Submissions"
-              value={stats.formSubmissions}
-              icon={TrendingUp}
-              color="bg-purple-50 dark:bg-purple-900/20"
-            />
+            {errors.stats ? (
+              <div className="col-span-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <p className="text-red-600 dark:text-red-400">{errors.stats}</p>
+                <Button onClick={fetchDashboardData} className="mt-2">
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <>
+                <StatCard
+                  title="Total Users"
+                  value={stats.totalUsers}
+                  icon={Users}
+                  color="bg-blue-50 dark:bg-blue-900/20"
+                />
+                <StatCard
+                  title="Active Members"
+                  value={stats.activeMembers}
+                  icon={CreditCard}
+                  color="bg-green-50 dark:bg-green-900/20"
+                />
+                <StatCard
+                  title="Trial Users"
+                  value={stats.trialUsers}
+                  icon={FileText}
+                  color="bg-yellow-50 dark:bg-yellow-900/20"
+                />
+                <StatCard
+                  title="Free Trial Requests"
+                  value={stats.formSubmissions}
+                  icon={TrendingUp}
+                  color="bg-purple-50 dark:bg-purple-900/20"
+                />
+              </>
+            )}
           </div>
 
           {/* Quick Actions */}
@@ -243,253 +292,187 @@ export default function AdminDashboard() {
                   : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
-              Form Submissions
+              Free Trial Requests
             </button>
           </div>
 
           {/* Content Area */}
-          {activeTab === "users" ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold dark:text-white">
-                  User Management
-                </h2>
-                <div className="flex gap-4 items-center">
-                  <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                    {statusOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setSelectedStatus(option.value)}
-                        className={`px-4 py-2 text-sm transition-colors ${
-                          selectedStatus === option.value
-                            ? "bg-primary text-white"
-                            : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        }`}
+          <Card className="p-6">
+            {activeTab === "users" ? (
+              <>
+                {errors.users ? (
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <p className="text-red-600 dark:text-red-400">
+                      {errors.users}
+                    </p>
+                    <Button onClick={fetchDashboardData} className="mt-2">
+                      Retry
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <Input
+                            placeholder="Search users..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                      <select
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
                       >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="relative w-64">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      type="text"
-                      placeholder="Search users..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-              </div>
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Joined
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {loading ? (
-                      <tr>
-                        <td colSpan={5} className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : filteredUsers.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-6 py-4 text-center text-gray-500 dark:text-gray-400"
-                        >
-                          No users found
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredUsers.map((user) => (
-                        <tr
-                          key={user.id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {user.first_name} {user.last_name}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {user.email}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                user.membership_status === "active"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                  : user.membership_status === "trial"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-                              }`}
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b dark:border-gray-700">
+                            <th className="text-left py-4 px-6 font-medium">
+                              Name
+                            </th>
+                            <th className="text-left py-4 px-6 font-medium">
+                              Email
+                            </th>
+                            <th className="text-left py-4 px-6 font-medium">
+                              Status
+                            </th>
+                            <th className="text-left py-4 px-6 font-medium">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredUsers.map((user) => (
+                            <tr
+                              key={user.id}
+                              className="border-b dark:border-gray-700"
                             >
-                              {(user.membership_status || "inactive")
-                                .charAt(0)
-                                .toUpperCase() +
-                                (user.membership_status || "inactive").slice(1)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Link href={`/admin/dashboard/users/${user.id}`}>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-primary hover:text-primary/90"
-                              >
-                                View Details
-                              </Button>
-                            </Link>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold dark:text-white">
-                  Form Submissions
-                </h2>
-                <div className="flex gap-4 items-center">
-                  <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                    {submissionStatusOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() =>
-                          setSelectedSubmissionStatus(option.value)
-                        }
-                        className={`px-4 py-2 text-sm transition-colors ${
-                          selectedSubmissionStatus === option.value
-                            ? "bg-primary text-white"
-                            : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                              <td className="py-4 px-6">
+                                {user.first_name} {user.last_name}
+                              </td>
+                              <td className="py-4 px-6">{user.email}</td>
+                              <td className="py-4 px-6">
+                                <span
+                                  className={`px-3 py-1 rounded-full text-sm ${
+                                    user.membership_status === "active"
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                      : user.membership_status === "trial"
+                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                                      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+                                  }`}
+                                >
+                                  {user.membership_status}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    router.push(`/admin/users/${user.id}`)
+                                  }
+                                >
+                                  View Details
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {errors.trials ? (
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <p className="text-red-600 dark:text-red-400">
+                      {errors.trials}
+                    </p>
+                    <Button onClick={fetchDashboardData} className="mt-2">
+                      Retry
+                    </Button>
                   </div>
-                  <div className="relative w-64">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      type="text"
-                      placeholder="Search submissions..."
-                      value={submissionSearchQuery}
-                      onChange={(e) => setSubmissionSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Phone
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Submitted At
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredSubmissions.map((submission) => (
-                      <tr key={submission.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {submission.name}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {submission.email}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {submission.phone || "-"}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 text-sm font-semibold rounded-full ${
-                              statusColors[
-                                submission.status as keyof typeof statusColors
-                              ]
-                            }`}
-                          >
-                            {submission.status.charAt(0).toUpperCase() +
-                              submission.status.slice(1)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(submission.submittedAt).toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                            href={`/admin/dashboard/submissions/${submission.id}`}
-                          >
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-primary hover:text-primary/90"
+                ) : (
+                  <>
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <Input
+                            placeholder="Search free trial requests..."
+                            value={submissionSearchQuery}
+                            onChange={(e) =>
+                              setSubmissionSearchQuery(e.target.value)
+                            }
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b dark:border-gray-700">
+                            <th className="text-left py-4 px-6 font-medium">
+                              Name
+                            </th>
+                            <th className="text-left py-4 px-6 font-medium">
+                              Email
+                            </th>
+                            <th className="text-left py-4 px-6 font-medium">
+                              Phone
+                            </th>
+                            <th className="text-left py-4 px-6 font-medium">
+                              Submitted At
+                            </th>
+                            <th className="text-left py-4 px-6 font-medium">
+                              Goals
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredRequests.map((request) => (
+                            <tr
+                              key={request._id}
+                              className="border-b dark:border-gray-700"
                             >
-                              View Details
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+                              <td className="py-4 px-6">
+                                {request.firstName} {request.lastName}
+                              </td>
+                              <td className="py-4 px-6">{request.email}</td>
+                              <td className="py-4 px-6">{request.phone}</td>
+                              <td className="py-4 px-6">
+                                {format(new Date(request.createdAt), "PPp")}
+                              </td>
+                              <td className="py-4 px-6">
+                                {request.fitnessGoals || "Not specified"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </Card>
         </motion.div>
       </div>
     </main>
