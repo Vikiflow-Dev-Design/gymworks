@@ -72,6 +72,9 @@ export async function POST(req: Request) {
       reference,
       amount: plan.price,
       status: "pending",
+      membershipId: existingMembership
+        ? existingMembership._id.toString()
+        : plan._id.toString(),
       metadata: {
         planId: plan._id,
         planName: plan.name,
@@ -87,7 +90,10 @@ export async function POST(req: Request) {
         userId,
         planId: plan._id.toString(),
         planName: plan.name,
-        membershipId: existingMembership?._id.toString(), // Include existing membership ID if it exists
+        // Use membership ID for renewals, plan ID for new subscriptions
+        membershipId: existingMembership
+          ? existingMembership._id.toString()
+          : plan._id.toString(),
         paymentType,
       },
       reference,
@@ -116,25 +122,3 @@ export async function POST(req: Request) {
  * @returns {Date} The calculated end date
  * @throws {Error} If duration is invalid
  */
-function calculateEndDate(startDate: Date, duration: string): Date {
-  const endDate = new Date(startDate);
-
-  switch (duration) {
-    case "month":
-      endDate.setMonth(endDate.getMonth() + 1);
-      break;
-    case "3 months":
-      endDate.setMonth(endDate.getMonth() + 3);
-      break;
-    case "6 months":
-      endDate.setMonth(endDate.getMonth() + 6);
-      break;
-    case "year":
-      endDate.setFullYear(endDate.getFullYear() + 1);
-      break;
-    default:
-      throw new Error("Invalid duration");
-  }
-
-  return endDate;
-}

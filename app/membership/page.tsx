@@ -122,7 +122,7 @@ export default function Membership() {
 
   const handleSubscribe = async (planId: string) => {
     if (!isSignedIn) {
-      router.push("/sign-in");
+      router.push("/auth/sign-in");
       return;
     }
 
