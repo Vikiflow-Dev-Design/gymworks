@@ -8,33 +8,8 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/mongodb/connectDB";
 import { verifyPayment } from "@/lib/paystack";
 import Transaction from "@/lib/mongodb/models/Transaction";
-import Membership from "@/lib/mongodb/models/Membership";
-import Plan from "@/lib/mongodb/models/Plan";
 
 export const dynamic = "force-dynamic"; // This makes the route fully dynamic
-
-function calculateEndDate(startDate: Date, duration: string): Date {
-  const endDate = new Date(startDate);
-
-  switch (duration) {
-    case "month":
-      endDate.setMonth(endDate.getMonth() + 1);
-      break;
-    case "3 months":
-      endDate.setMonth(endDate.getMonth() + 3);
-      break;
-    case "6 months":
-      endDate.setMonth(endDate.getMonth() + 6);
-      break;
-    case "year":
-      endDate.setFullYear(endDate.getFullYear() + 1);
-      break;
-    default:
-      throw new Error("Invalid duration");
-  }
-
-  return endDate;
-}
 
 /**
  * GET handler for payment verification
@@ -59,7 +34,7 @@ export async function GET(request: Request) {
     // Verify payment with Paystack
     const paymentData = await verifyPayment(reference);
 
-    // Find and update transaction
+    // Find transaction to include in redirect
     const transaction = await Transaction.findOne({ reference });
     if (!transaction) {
       return NextResponse.redirect(
@@ -67,53 +42,36 @@ export async function GET(request: Request) {
       );
     }
 
-    // Update transaction with verification result
-    console.log("paymentData", paymentData.status);
-    transaction.status =
-      paymentData.status === "success" ? "success" : "failed";
-    transaction.paymentResponse = paymentData;
-    await transaction.save();
+    // Handle different payment statuses
+    switch (paymentData.status) {
+      case "success":
+        return NextResponse.redirect(
+          `${baseUrl}/payment/success?reference=${reference}`
+        );
 
-    if (paymentData.status === "success") {
-      // Update membership status if payment was successful
-      const membership = await Membership.findById(transaction.membershipId);
-      if (membership) {
-        // Get the plan to calculate new end date
-        const plan = await Plan.findById(membership.planId);
-        if (!plan) {
-          return NextResponse.redirect(
-            `${baseUrl}/payment/failed?error=plan_not_found`
-          );
-        }
+      case "abandoned":
+        transaction.status = "abandoned";
+        transaction.metadata.abandonedAt = new Date();
+        await transaction.save();
+        return NextResponse.redirect(
+          `${baseUrl}/payment/failed?error=payment_abandoned&reference=${reference}`
+        );
 
-        // Set new dates
-        const startDate = new Date();
-        const endDate = calculateEndDate(startDate, plan.duration);
+      case "timeout":
+        transaction.status = "timeout";
+        transaction.metadata.timeoutAt = new Date();
+        await transaction.save();
+        return NextResponse.redirect(
+          `${baseUrl}/payment/failed?error=payment_timeout&reference=${reference}`
+        );
 
-        // Update membership
-        membership.startDate = startDate;
-        membership.endDate = endDate;
-        membership.status = "active";
-        membership.paymentStatus = "paid";
-        await membership.save();
-
-        console.log(`Membership renewed: Start: ${startDate}, End: ${endDate}`);
-      }
-
-      return NextResponse.redirect(
-        `${baseUrl}/payment/success?reference=${reference}`
-      );
-    } else {
-      // Update membership payment status to reflect failed payment
-      const membership = await Membership.findById(transaction.membershipId);
-      if (membership) {
-        membership.paymentStatus = "failed";
-        await membership.save();
-      }
-
-      return NextResponse.redirect(
-        `${baseUrl}/payment/failed?error=payment_failed&reference=${reference}`
-      );
+      default:
+        transaction.status = "failed";
+        transaction.metadata.failureReason = "Payment verification failed";
+        await transaction.save();
+        return NextResponse.redirect(
+          `${baseUrl}/payment/failed?error=payment_failed&reference=${reference}`
+        );
     }
   } catch (error) {
     console.error("Payment verification error:", error);

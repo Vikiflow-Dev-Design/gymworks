@@ -22,7 +22,7 @@ const transactionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "success", "failed"],
+      enum: ["pending", "success", "failed", "abandoned", "timeout"],
       default: "pending",
     },
     paymentMethod: {
@@ -42,6 +42,8 @@ const transactionSchema = new mongoose.Schema(
         required: true,
       },
       failureReason: String,
+      abandonedAt: Date,
+      timeoutAt: Date,
     },
     paymentResponse: {
       type: mongoose.Schema.Types.Mixed,

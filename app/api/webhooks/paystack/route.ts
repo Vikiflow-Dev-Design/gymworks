@@ -4,6 +4,28 @@ import { connect } from "@/lib/mongodb/connectDB";
 import { verifyWebhookSignature } from "@/lib/paystack";
 import Transaction from "@/lib/mongodb/models/Transaction";
 import Membership from "@/lib/mongodb/models/Membership";
+import Plan from "@/lib/mongodb/models/Plan";
+
+function calculateEndDate(startDate: Date, duration: string): Date {
+  const endDate = new Date(startDate);
+  switch (duration) {
+    case "month":
+      endDate.setMonth(endDate.getMonth() + 1);
+      break;
+    case "3 months":
+      endDate.setMonth(endDate.getMonth() + 3);
+      break;
+    case "6 months":
+      endDate.setMonth(endDate.getMonth() + 6);
+      break;
+    case "year":
+      endDate.setFullYear(endDate.getFullYear() + 1);
+      break;
+    default:
+      throw new Error("Invalid duration");
+  }
+  return endDate;
+}
 
 export async function POST(req: Request) {
   try {
@@ -29,15 +51,21 @@ export async function POST(req: Request) {
     await connect();
 
     switch (event.event) {
-      case "charge.success":
+      case "charge.success || transfer.success":
         await handleSuccessfulPayment(event.data);
         break;
 
-      case "charge.failed":
+      case "charge.failed transfer.failed":
         await handleFailedPayment(event.data);
         break;
 
-      // Add more event handlers as needed
+      case "transfer.abandoned || charge.abandoned":
+        await handleAbandonedPayment(event.data);
+        break;
+
+      case "transfer.timeout || charge.timedout":
+        await handleTimeoutPayment(event.data);
+        break;
     }
 
     return NextResponse.json({ received: true });
@@ -52,58 +80,73 @@ export async function POST(req: Request) {
 
 async function handleSuccessfulPayment(data: any) {
   const { reference, metadata } = data;
-  const { userId, membershipId } = metadata;
+  const { userId, planId, planName } = metadata;
 
   // Update transaction
   const transaction = await Transaction.findOne({ reference });
-  if (transaction) {
-    transaction.status = "success";
-    transaction.paymentResponse = data;
-    await transaction.save();
+  if (!transaction) {
+    console.error("Transaction not found:", reference);
+    return;
   }
 
-  // Update membership
-  const membership = await Membership.findById(membershipId);
-  if (membership) {
-    if (transaction?.metadata.paymentType === "renewal") {
+  transaction.status = "success";
+  transaction.paymentResponse = data;
+  await transaction.save();
+
+  try {
+    // Get the plan details
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      console.error("Plan not found:", planId);
+      return;
+    }
+
+    // Check for existing active membership
+    const existingMembership = await Membership.findOne({
+      userId,
+      planId,
+      status: "active",
+      endDate: { $gt: new Date() },
+    });
+
+    const startDate = new Date();
+    const endDate = calculateEndDate(startDate, plan.duration);
+
+    if (existingMembership) {
       // For renewal, create new membership period
-      const startDate = new Date(membership.endDate);
-      const endDate = new Date(startDate);
-
-      // Calculate new end date based on plan duration
-      switch (membership.duration) {
-        case "month":
-          endDate.setMonth(endDate.getMonth() + 1);
-          break;
-        case "3 months":
-          endDate.setMonth(endDate.getMonth() + 3);
-          break;
-        case "6 months":
-          endDate.setMonth(endDate.getMonth() + 6);
-          break;
-        case "year":
-          endDate.setFullYear(endDate.getFullYear() + 1);
-          break;
-      }
-
       await Membership.create({
-        userId: membership.userId,
-        planId: membership.planId,
-        planName: membership.planName,
-        price: membership.price,
-        features: membership.features,
+        userId,
+        planId: plan._id,
+        planName: plan.name,
+        price: plan.price,
+        features: plan.features,
+        startDate: new Date(existingMembership.endDate), // Start from end of current membership
+        endDate: calculateEndDate(
+          new Date(existingMembership.endDate),
+          plan.duration
+        ),
+        status: "active",
+        paymentStatus: "paid",
+        renewedFrom: existingMembership._id,
+      });
+    } else {
+      // Create new membership
+      await Membership.create({
+        userId,
+        planId: plan._id,
+        planName: plan.name,
+        price: plan.price,
+        features: plan.features,
         startDate,
         endDate,
         status: "active",
         paymentStatus: "paid",
-        renewedFrom: membership._id,
       });
-    } else {
-      // For new subscription, update existing membership
-      membership.status = "active";
-      membership.paymentStatus = "paid";
-      await membership.save();
     }
+  } catch (error) {
+    console.error("Error creating membership:", error);
+    // Note: We don't throw here as the payment was successful
+    // We should implement a retry mechanism or alert admin
   }
 }
 
@@ -115,9 +158,32 @@ async function handleFailedPayment(data: any) {
   if (transaction) {
     transaction.status = "failed";
     transaction.paymentResponse = data;
+    transaction.metadata.failureReason =
+      data.gateway_response || "Payment failed";
     await transaction.save();
   }
+}
 
-  // Note: We don't update membership status on failed payment
-  // as discussed earlier
+async function handleAbandonedPayment(data: any) {
+  const { reference } = data;
+
+  const transaction = await Transaction.findOne({ reference });
+  if (transaction) {
+    transaction.status = "abandoned";
+    transaction.paymentResponse = data;
+    transaction.metadata.abandonedAt = new Date();
+    await transaction.save();
+  }
+}
+
+async function handleTimeoutPayment(data: any) {
+  const { reference } = data;
+
+  const transaction = await Transaction.findOne({ reference });
+  if (transaction) {
+    transaction.status = "timeout";
+    transaction.paymentResponse = data;
+    transaction.metadata.timeoutAt = new Date();
+    await transaction.save();
+  }
 }

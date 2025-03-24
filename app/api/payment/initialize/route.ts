@@ -11,9 +11,24 @@ import {
   initializePayment,
   generateTransactionReference,
 } from "@/lib/paystack";
-import Membership from "@/lib/mongodb/models/Membership";
 import Transaction from "@/lib/mongodb/models/Transaction";
 import Plan from "@/lib/mongodb/models/Plan";
+import Membership from "@/lib/mongodb/models/Membership";
+import { Types } from "mongoose";
+
+interface MembershipDocument {
+  _id: Types.ObjectId;
+  userId: string;
+  planId: Types.ObjectId;
+  planName: string;
+  price: number;
+  features: string[];
+  startDate: Date;
+  endDate: Date;
+  status: string;
+  paymentStatus: string;
+  renewedFrom?: Types.ObjectId;
+}
 
 /**
  * POST handler for payment initialization
@@ -41,40 +56,26 @@ export async function POST(req: Request) {
     }
 
     // Check for existing active membership
-    const existingMembership = await Membership.findOne({
+    const existingMembership = (await Membership.findOne({
       userId,
       planId,
       status: "active",
       endDate: { $gt: new Date() },
-    });
+    })) as MembershipDocument;
 
-    // Create a pending membership or use existing one
-    const membership =
-      existingMembership ||
-      (await Membership.create({
-        userId,
-        planId: plan._id,
-        planName: plan.name,
-        price: plan.price,
-        features: plan.features,
-        startDate: new Date(),
-        endDate: calculateEndDate(new Date(), plan.duration),
-        status: "pending" as const,
-        paymentStatus: "pending" as const,
-      }));
+    const paymentType = existingMembership ? "renewal" : "new_subscription";
 
     // Create a transaction record
     const reference = generateTransactionReference();
     const transaction = await Transaction.create({
       userId,
-      membershipId: membership._id,
       reference,
       amount: plan.price,
       status: "pending",
       metadata: {
         planId: plan._id,
         planName: plan.name,
-        paymentType: existingMembership ? "renewal" : "new_subscription",
+        paymentType,
       },
     });
 
@@ -86,8 +87,8 @@ export async function POST(req: Request) {
         userId,
         planId: plan._id.toString(),
         planName: plan.name,
-        membershipId: membership._id.toString(),
-        paymentType: existingMembership ? "renewal" : "new_subscription",
+        membershipId: existingMembership?._id.toString(), // Include existing membership ID if it exists
+        paymentType,
       },
       reference,
     });
