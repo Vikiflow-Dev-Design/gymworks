@@ -60,8 +60,6 @@ export async function POST(req: Request) {
     const existingMembership = (await Membership.findOne({
       userId,
       planId,
-      status: "active",
-      endDate: { $gt: new Date() },
     })) as MembershipDocument;
 
     const paymentType = existingMembership ? "renewal" : "new_subscription";
@@ -77,6 +75,8 @@ export async function POST(req: Request) {
       planName: plan.name,
     });
 
+    console.log("Payment reference:", reference, "initialize payment");
+
     // Initialize Paystack payment
     const paymentData = await initializePayment({
       email: req.headers.get("x-user-email") || "",
@@ -86,7 +86,9 @@ export async function POST(req: Request) {
         planId: plan._id.toString(),
         planName: plan.name,
         // Use membership ID for renewals, else pass in nothing
-        membershipId: existingMembership && existingMembership._id.toString(),
+        membershipId: existingMembership
+          ? existingMembership._id.toString()
+          : "no_current_membership",
         paymentType,
       },
       reference,

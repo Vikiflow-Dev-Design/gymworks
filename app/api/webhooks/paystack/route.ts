@@ -51,19 +51,19 @@ export async function POST(req: Request) {
     await connect();
 
     switch (event.event) {
-      case "charge.success || transfer.success":
+      case "charge.success":
         await handleSuccessfulPayment(event.data);
         break;
 
-      case "charge.failed transfer.failed":
+      case "charge.failed":
         await handleFailedPayment(event.data);
         break;
 
-      case "transfer.abandoned || charge.abandoned":
+      case "charge.abandoned":
         await handleAbandonedPayment(event.data);
         break;
 
-      case "transfer.timeout || charge.timedout":
+      case "charge.timedout":
         await handleTimeoutPayment(event.data);
         break;
     }
