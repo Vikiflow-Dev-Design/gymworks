@@ -9,12 +9,11 @@ const transactionSchema = new mongoose.Schema(
     membershipId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Membership",
-      required: true,
     },
     reference: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
     amount: {
       type: Number,

@@ -15,6 +15,7 @@ import Transaction from "@/lib/mongodb/models/Transaction";
 import Plan from "@/lib/mongodb/models/Plan";
 import Membership from "@/lib/mongodb/models/Membership";
 import { Types } from "mongoose";
+import { createTransaction } from "@/app/actions/transaction";
 
 interface MembershipDocument {
   _id: Types.ObjectId;
@@ -67,19 +68,13 @@ export async function POST(req: Request) {
 
     // Create a transaction record
     const reference = generateTransactionReference();
-    const transaction = await Transaction.create({
-      userId,
-      reference,
+
+    await createTransaction({
+      planId: plan._id.toString(),
       amount: plan.price,
-      status: "pending",
-      membershipId: existingMembership
-        ? existingMembership._id.toString()
-        : plan._id.toString(),
-      metadata: {
-        planId: plan._id,
-        planName: plan.name,
-        paymentType,
-      },
+      reference,
+      paymentType,
+      planName: plan.name,
     });
 
     // Initialize Paystack payment
@@ -90,10 +85,8 @@ export async function POST(req: Request) {
         userId,
         planId: plan._id.toString(),
         planName: plan.name,
-        // Use membership ID for renewals, plan ID for new subscriptions
-        membershipId: existingMembership
-          ? existingMembership._id.toString()
-          : plan._id.toString(),
+        // Use membership ID for renewals, else pass in nothing
+        membershipId: existingMembership && existingMembership._id.toString(),
         paymentType,
       },
       reference,

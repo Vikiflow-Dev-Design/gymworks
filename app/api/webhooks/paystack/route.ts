@@ -105,8 +105,6 @@ async function handleSuccessfulPayment(data: any) {
     const existingMembership = await Membership.findOne({
       userId,
       planId,
-      status: "active",
-      endDate: { $gt: new Date() },
     });
 
     const startDate = new Date();
@@ -114,13 +112,11 @@ async function handleSuccessfulPayment(data: any) {
 
     if (existingMembership) {
       // For renewal, create new membership period
-      await Membership.create({
-        userId,
-        planId: plan._id,
+      await Membership.updateOne({
         planName: plan.name,
         price: plan.price,
         features: plan.features,
-        startDate: new Date(existingMembership.endDate), // Start from end of current membership
+        renewalDate: new Date(existingMembership.endDate), // renew from end of current membership
         endDate: calculateEndDate(
           new Date(existingMembership.endDate),
           plan.duration

@@ -8,6 +8,7 @@ export interface IMembership extends Document {
   planId: mongoose.Types.ObjectId;
   planName: string;
   startDate: Date;
+  renewalDate: Date;
   endDate: Date;
   price: number;
   status: MembershipStatus;
@@ -43,6 +44,9 @@ const membershipSchema = new Schema<IMembership>(
       type: Date,
       required: true,
       default: Date.now,
+    },
+    renewalDate: {
+      type: Date,
     },
     endDate: {
       type: Date,
