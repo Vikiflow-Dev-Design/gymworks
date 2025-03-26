@@ -100,11 +100,9 @@ export async function updateUserRole(
     // Check if current user is admin
     const currentUser = await User.findOne({ email: currentUserEmail });
 
-    // console.log(currentUser);
-
-    // if (!currentUser || currentUser.role !== "admin") {
-    //   throw new Error("Unauthorized: Only admins can modify user roles");
-    // }
+    if (!currentUser || currentUser.role !== "admin") {
+      throw new Error("Unauthorized: Only admins can modify user roles");
+    }
 
     // Update target user's role
     const targetUser = await User.findOne({ email: targetUserEmail });
@@ -115,9 +113,6 @@ export async function updateUserRole(
     }
 
     await User.findOneAndUpdate({ email: targetUserEmail }, { role: "admin" });
-
-    // targetUser.role = role;
-    // await targetUser.save();
 
     return {
       success: true,
