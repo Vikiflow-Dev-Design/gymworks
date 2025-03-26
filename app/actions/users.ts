@@ -114,7 +114,7 @@ export async function updateUserRole(
       throw new Error("Target user not found");
     }
 
-    await User.findOneAndUpdate({ email: currentUserEmail }, { role: "admin" });
+    await User.findOneAndUpdate({ email: targetUserEmail }, { role: "admin" });
 
     // targetUser.role = role;
     // await targetUser.save();
