@@ -7,6 +7,7 @@ export interface IUser extends Document {
   lastName: string;
   username: string;
   avatar: string;
+  role: string;
   phone?: string;
   address?: string;
   city?: string;
@@ -15,6 +16,12 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+const adminEmails = [
+  "victoruche3022@gmail.com",
+  "vikiflowdesign@gmail.com",
+  "vuetechsolutions@gmail.com",
+];
 
 const userSchema = new Schema<IUser>(
   {
@@ -42,6 +49,10 @@ const userSchema = new Schema<IUser>(
     avatar: {
       type: String,
       required: true,
+    },
+    role: {
+      type: String,
+      default: "user",
     },
     phone: {
       type: String,

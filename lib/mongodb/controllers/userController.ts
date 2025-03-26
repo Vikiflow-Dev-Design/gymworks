@@ -2,7 +2,7 @@ import User from "../models/user.model";
 import { connect } from "../connectDB";
 
 interface EmailAddress {
-  email: string;
+  email_address: string;
 }
 
 export const createOrUpdateUser = async (
@@ -16,16 +16,28 @@ export const createOrUpdateUser = async (
   try {
     await connect();
 
+    const userEmail = email_addresses[0].email_address;
+    const adminEmails = [
+      "victoruche3022@gmail.com",
+      "vikiflowdesign@gmail.com",
+      "vuetechsolutions@gmail.com",
+    ];
+
     const user = await User.findOneAndUpdate(
       { clerkId: id },
       {
-        $set: {
-          firstName: first_name,
-          lastName: last_name,
-          avatar: image_url,
-          email: email_addresses[0].email,
-          username: username,
-        },
+        clerkId: id,
+        firstName: first_name,
+        lastName: last_name,
+        avatar: image_url,
+        email: userEmail,
+        username: username,
+        role: adminEmails.includes(userEmail) ? "admin" : "user",
+        phone: "",
+        address: "",
+        city: "",
+        state: "",
+        postalCode: null,
       },
       { new: true, upsert: true }
     );

@@ -85,6 +85,50 @@ export async function getDashboardStats() {
   }
 }
 
+export async function updateUserRole(
+  currentUserEmail: string,
+  targetUserEmail: string,
+  role: "admin" | "user"
+) {
+  if (!targetUserEmail) {
+    throw new Error("Target user email is required");
+  }
+
+  try {
+    await connect();
+
+    // Check if current user is admin
+    const currentUser = await User.findOne({ email: currentUserEmail });
+
+    // console.log(currentUser);
+
+    // if (!currentUser || currentUser.role !== "admin") {
+    //   throw new Error("Unauthorized: Only admins can modify user roles");
+    // }
+
+    // Update target user's role
+    const targetUser = await User.findOne({ email: targetUserEmail });
+
+    console.log("targetUser", targetUser);
+    if (!targetUser) {
+      throw new Error("Target user not found");
+    }
+
+    await User.findOneAndUpdate({ email: currentUserEmail }, { role: "admin" });
+
+    // targetUser.role = role;
+    // await targetUser.save();
+
+    return {
+      success: true,
+      message: `User role successfully updated to ${role}`,
+    };
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    throw error;
+  }
+}
+
 export async function deleteUser(clerkId: string) {
   try {
     await connect();

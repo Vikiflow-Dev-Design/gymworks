@@ -173,13 +173,13 @@ export default function UserDetails({ params }: { params: { id: string } }) {
           </div>
 
           {/* User Details Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 gap-6 mb-6">
             {/* Personal Information */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4 dark:text-white">
+            <Card className="p-4">
+              <h2 className="text-lg font-semibold mb-3 dark:text-white">
                 Personal Information
               </h2>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Phone Number
@@ -224,59 +224,6 @@ export default function UserDetails({ params }: { params: { id: string } }) {
             </Card>
 
             {/* Current Membership */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4 dark:text-white">
-                Current Membership
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Current Plan
-                  </p>
-                  <p className="font-medium dark:text-white">
-                    {user.plan_name || "No active plan"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Membership Status
-                  </p>
-                  <p className="font-medium dark:text-white">
-                    {user.membership_status || "Inactive"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Start Date
-                  </p>
-                  <p className="font-medium dark:text-white">
-                    {user.membership_start_date
-                      ? new Date(
-                          user.membership_start_date
-                        ).toLocaleDateString()
-                      : "Not available"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    End Date
-                  </p>
-                  <p className="font-medium dark:text-white">
-                    {user.membership_end_date
-                      ? new Date(user.membership_end_date).toLocaleDateString()
-                      : "Not available"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Payment Status
-                  </p>
-                  <p className="font-medium dark:text-white">
-                    {user.payment_status || "No payment information"}
-                  </p>
-                </div>
-              </div>
-            </Card>
           </div>
 
           {/* Membership History */}

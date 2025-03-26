@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import RoleManagement from "@/components/admin/role-management";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
@@ -208,6 +209,7 @@ export default function AdminDashboard() {
   return (
     <main className="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="max-w-7xl mx-auto">
+        <RoleManagement className="lg:col-span-2" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
