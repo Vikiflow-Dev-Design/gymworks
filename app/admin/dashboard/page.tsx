@@ -208,11 +208,13 @@ export default function AdminDashboard() {
 
   return (
     <motion.div>
-      <div className="container mx-auto p-6 space-y-8">
-        <h1 className="text-3xl font-bold mb-8 dark:text-white">Dashboard</h1>
+      <div className="container mx-auto p-4 sm:p-6 space-y-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 dark:text-white">
+          Dashboard
+        </h1>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {errors.stats ? (
             <div className="col-span-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
               <p className="text-red-600 dark:text-red-400">{errors.stats}</p>
@@ -229,18 +231,6 @@ export default function AdminDashboard() {
                 color="bg-blue-50 dark:bg-blue-900/20"
               />
               <StatCard
-                title="Active Members"
-                value={stats.activeMembers}
-                icon={CreditCard}
-                color="bg-green-50 dark:bg-green-900/20"
-              />
-              <StatCard
-                title="Trial Users"
-                value={stats.trialUsers}
-                icon={FileText}
-                color="bg-yellow-50 dark:bg-yellow-900/20"
-              />
-              <StatCard
                 title="Free Trial Requests"
                 value={stats.formSubmissions}
                 icon={TrendingUp}
@@ -251,27 +241,27 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <Link href="/admin/dashboard/plans">
-              <Button className="bg-primary hover:bg-primary/90">
+              <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
                 <CreditCard className="w-4 h-4 mr-2" /> Manage Plans
               </Button>
             </Link>
             <Link href="/admin/dashboard/roles">
-              <Button className="bg-primary hover:bg-primary/90">
+              <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
                 <CreditCard className="w-4 h-4 mr-2" /> Manage roles
               </Button>
             </Link>
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
               <Bell className="w-4 h-4 mr-2" /> Notifications
             </Button>
           </div>
 
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-2 sm:gap-4 mt-4 sm:mt-0">
             <button
               onClick={() => handleTabChange("users")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`flex-1 sm:flex-none px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === "users"
                   ? "bg-primary text-white"
                   : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -281,7 +271,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => handleTabChange("submissions")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`flex-1 sm:flex-none px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === "submissions"
                   ? "bg-primary text-white"
                   : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -293,7 +283,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Content Area */}
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6 overflow-hidden">
           {activeTab === "users" ? (
             <>
               {loading.users ? (
@@ -321,77 +311,59 @@ export default function AdminDashboard() {
                         />
                       </div>
                     </div>
-                    <select
-                      value={selectedStatus}
-                      onChange={(e) => setSelectedStatus(e.target.value)}
-                      className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                    >
-                      {statusOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
                   </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b dark:border-gray-700">
-                          <th className="text-left py-4 px-6 font-medium">
-                            Name
-                          </th>
-                          <th className="text-left py-4 px-6 font-medium">
-                            Email
-                          </th>
-                          <th className="text-left py-4 px-6 font-medium">
-                            Status
-                          </th>
-                          <th className="text-left py-4 px-6 font-medium">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredUsers.map((user) => (
-                          <tr
-                            key={user.id}
-                            className="border-b dark:border-gray-700"
-                          >
-                            <td className="py-4 px-6">
-                              {user.first_name} {user.last_name}
-                            </td>
-                            <td className="py-4 px-6">{user.email}</td>
-                            <td className="py-4 px-6">
-                              <span
-                                className={`px-3 py-1 rounded-full text-sm ${
-                                  user.membership_status === "active"
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                    : user.membership_status === "trial"
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-                                }`}
-                              >
-                                {user.membership_status}
-                              </span>
-                            </td>
-                            <td className="py-4 px-6">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  router.push(
-                                    `/admin/dashboard/users/${user.id}`
-                                  )
-                                }
-                              >
-                                View Details
-                              </Button>
-                            </td>
+                  <div className="w-full">
+                    <div className="w-full">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b dark:border-gray-700">
+                            <th className="text-left py-3 px-4 font-medium">
+                              Name
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">
+                              Email
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium">
+                              Actions
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {filteredUsers.map((user) => (
+                            <tr
+                              key={user.id}
+                              className="border-b dark:border-gray-700"
+                            >
+                              <td className="py-3 px-4">
+                                <div>
+                                  {user.first_name} {user.last_name}
+                                </div>
+                                <div className="text-xs text-gray-500 sm:hidden">
+                                  {user.email}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 hidden sm:table-cell">
+                                {user.email}
+                              </td>
+                              <td className="py-3 px-4">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    router.push(
+                                      `/admin/dashboard/users/${user.id}`
+                                    )
+                                  }
+                                >
+                                  View Details
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </>
               )}
@@ -425,24 +397,18 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
+                  <div className="w-full">
+                    <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b dark:border-gray-700">
-                          <th className="text-left py-4 px-6 font-medium">
+                          <th className="text-left py-3 px-4 font-medium">
                             Name
                           </th>
-                          <th className="text-left py-4 px-6 font-medium">
+                          <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">
                             Email
                           </th>
-                          <th className="text-left py-4 px-6 font-medium">
-                            Phone
-                          </th>
-                          <th className="text-left py-4 px-6 font-medium">
-                            Submitted At
-                          </th>
-                          <th className="text-left py-4 px-6 font-medium">
-                            Goals
+                          <th className="text-left py-3 px-4 font-medium">
+                            Actions
                           </th>
                         </tr>
                       </thead>
@@ -452,16 +418,29 @@ export default function AdminDashboard() {
                             key={request._id}
                             className="border-b dark:border-gray-700"
                           >
-                            <td className="py-4 px-6">
-                              {request.firstName} {request.lastName}
+                            <td className="py-3 px-4">
+                              <div>
+                                {request.firstName} {request.lastName}
+                              </div>
+                              <div className="text-xs text-gray-500 sm:hidden">
+                                {request.email}
+                              </div>
                             </td>
-                            <td className="py-4 px-6">{request.email}</td>
-                            <td className="py-4 px-6">{request.phone}</td>
-                            <td className="py-4 px-6">
-                              {format(new Date(request.createdAt), "PPp")}
+                            <td className="py-3 px-4 hidden sm:table-cell">
+                              {request.email}
                             </td>
-                            <td className="py-4 px-6">
-                              {request.fitnessGoals || "Not specified"}
+                            <td className="py-3 px-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  router.push(
+                                    `/admin/dashboard/submissions/${request._id}`
+                                  )
+                                }
+                              >
+                                View Details
+                              </Button>
                             </td>
                           </tr>
                         ))}

@@ -157,19 +157,19 @@ export default function PlansManagement() {
   };
 
   return (
-    <div className="p-8 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen pt-20">
+    <div className="p-4 sm:p-8 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen pt-16 sm:pt-20">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 sm:mb-12">
             <div>
-              <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 dark:from-primary dark:to-primary/70 mb-4">
+              <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 dark:from-primary dark:to-primary/70 mb-4">
                 Plans Management
               </h1>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-2 sm:gap-4">
                 {["month", "3 months", "6 months", "year"].map((duration) => (
                   <Button
                     key={duration}
@@ -177,7 +177,7 @@ export default function PlansManagement() {
                     variant={
                       selectedDuration === duration ? "default" : "outline"
                     }
-                    className={`transition-all duration-300 ${
+                    className={`flex-1 sm:flex-none transition-all duration-300 ${
                       selectedDuration === duration
                         ? "bg-primary hover:bg-primary/90"
                         : ""
@@ -194,13 +194,13 @@ export default function PlansManagement() {
                 setEditingPlan(null);
                 setIsModalOpen(true);
               }}
-              className="bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 rounded-full px-6"
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 rounded-full px-6"
             >
               <Plus className="w-5 h-5 mr-2" /> Add New Plan
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             {plans.map((plan) => (
               <motion.div
                 key={plan._id}
@@ -208,20 +208,20 @@ export default function PlansManagement() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="p-8 relative hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 dark:hover:border-primary/20 overflow-hidden group">
+                <Card className="p-4 sm:p-8 relative hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 dark:hover:border-primary/20 overflow-hidden group">
                   {plan.popular && (
                     <div className="absolute -right-12 top-6 rotate-45 bg-primary px-12 py-1 text-white text-sm font-medium">
                       Popular
                     </div>
                   )}
-                  <div className="flex justify-between items-start mb-6">
+                  <div className="flex justify-between items-start mb-4 sm:mb-6">
                     <div>
-                      <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors duration-300">
+                      <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 group-hover:text-primary transition-colors duration-300">
                         {plan.name}
                       </h3>
-                      <p className="text-3xl font-bold text-primary mb-2">
+                      <p className="text-2xl sm:text-3xl font-bold text-primary mb-2">
                         {formatNaira(plan.price)}
-                        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 ml-2">
                           /{plan.duration}
                         </span>
                       </p>
@@ -245,11 +245,11 @@ export default function PlansManagement() {
                       </Button>
                     </div>
                   </div>
-                  <ul className="space-y-3">
+                  <ul className="space-y-2 sm:space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-3">
                         <span className="text-primary text-lg">•</span>
-                        <span className="text-gray-600 dark:text-gray-300">
+                        <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
                           {feature}
                         </span>
                       </li>
@@ -265,7 +265,7 @@ export default function PlansManagement() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-md relative shadow-2xl max-h-[90vh] overflow-y-auto"
+                className="bg-white dark:bg-gray-800 p-4 sm:p-8 rounded-2xl w-full max-w-md relative shadow-2xl max-h-[90vh] overflow-y-auto"
               >
                 <Button
                   variant="ghost"

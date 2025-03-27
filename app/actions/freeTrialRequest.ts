@@ -55,11 +55,22 @@ export async function getFreeTrialRequests() {
 
     const requests = await FreeTrialRequest.find()
       .sort({ createdAt: -1 })
-      .limit(100);
+      .limit(100)
+      .lean();
+
+    const transformedRequests = requests.map(request => ({
+      _id: request._id.toString(),
+      firstName: request.firstName,
+      lastName: request.lastName,
+      email: request.email,
+      phone: request.phone,
+      fitnessGoals: request.fitnessGoals,
+      createdAt: request.createdAt.toISOString()
+    }));
 
     return {
       success: true,
-      data: requests,
+      data: transformedRequests,
     };
   } catch (error: any) {
     console.error("Error fetching free trial requests:", error);
