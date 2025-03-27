@@ -1,7 +1,7 @@
 "use server";
 
 import { connect } from "@/lib/mongodb/connectDB";
-import User from "@/lib/mongodb/models/user.model";
+import User from "@/lib/mongodb/models/user";
 import { User as UserType } from "@/types/user";
 
 export async function getUsers(): Promise<{ users: UserType[] }> {
@@ -104,15 +104,22 @@ export async function updateUserRole(
       throw new Error("Unauthorized: Only admins can modify user roles");
     }
 
-    // Update target user's role
+    // Find target user to get their Clerk ID
     const targetUser = await User.findOne({ email: targetUserEmail });
 
-    console.log("targetUser", targetUser);
     if (!targetUser) {
       throw new Error("Target user not found");
     }
 
-    await User.findOneAndUpdate({ email: targetUserEmail }, { role: role });
+    // Update user's role in Clerk's public metadata
+    const { clerkClient } = await import("@clerk/nextjs/server");
+    const clerk = await clerkClient();
+
+    await clerk.users.updateUserMetadata(targetUser.clerkId, {
+      publicMetadata: {
+        role,
+      },
+    });
 
     return {
       success: true,

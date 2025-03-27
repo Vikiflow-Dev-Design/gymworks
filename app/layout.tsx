@@ -4,7 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/layout/footer";
-import { WEBSITE_NAME } from "@/lib/utils";
+import { checkAdminUser, WEBSITE_NAME } from "@/lib/utils";
 import FirstVisitForm from "@/components/ui/first-visit-form";
 import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });

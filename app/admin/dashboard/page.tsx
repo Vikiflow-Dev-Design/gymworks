@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import RoleManagement from "@/components/admin/role-management";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
@@ -209,7 +208,6 @@ export default function AdminDashboard() {
   return (
     <main className="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <RoleManagement className="lg:col-span-2" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -257,45 +255,45 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <Link href="/admin/dashboard/plans">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex gap-4">
+              <Link href="/admin/dashboard/plans">
+                <Button className="bg-primary hover:bg-primary/90">
+                  <CreditCard className="w-4 h-4 mr-2" /> Manage Plans
+                </Button>
+              </Link>
+              <Link href="/admin/dashboard/roles">
+                <Button className="bg-primary hover:bg-primary/90">
+                  <CreditCard className="w-4 h-4 mr-2" /> Manage roles
+                </Button>
+              </Link>
               <Button className="bg-primary hover:bg-primary/90">
-                <CreditCard className="w-4 h-4 mr-2" /> Manage Plans
+                <Bell className="w-4 h-4 mr-2" /> Notifications
               </Button>
-            </Link>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Calendar className="w-4 h-4 mr-2" /> View Schedule
-            </Button>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Dumbbell className="w-4 h-4 mr-2" /> Manage Classes
-            </Button>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Bell className="w-4 h-4 mr-2" /> Notifications
-            </Button>
-          </div>
+            </div>
 
-          {/* Tab Navigation */}
-          <div className="flex space-x-4 mb-6">
-            <button
-              onClick={() => handleTabChange("users")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeTab === "users"
-                  ? "bg-primary text-white"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              User Management
-            </button>
-            <button
-              onClick={() => handleTabChange("submissions")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeTab === "submissions"
-                  ? "bg-primary text-white"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              Free Trial Requests
-            </button>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => handleTabChange("users")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  activeTab === "users"
+                    ? "bg-primary text-white"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
+              >
+                User Management
+              </button>
+              <button
+                onClick={() => handleTabChange("submissions")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  activeTab === "submissions"
+                    ? "bg-primary text-white"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
+              >
+                Free Trial Requests
+              </button>
+            </div>
           </div>
 
           {/* Content Area */}
@@ -384,7 +382,9 @@ export default function AdminDashboard() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    router.push(`/admin/users/${user.id}`)
+                                    router.push(
+                                      `/admin/dashboard/users/${user.id}`
+                                    )
                                   }
                                 >
                                   View Details

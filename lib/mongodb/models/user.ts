@@ -17,13 +17,7 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
-const adminEmails = [
-  "victoruche3022@gmail.com",
-  "vikiflowdesign@gmail.com",
-  "vuetechsolutions@gmail.com",
-];
-
-const userSchema = new Schema<IUser>(
+const userSchema = new mongoose.Schema(
   {
     clerkId: {
       type: String,
@@ -78,7 +72,6 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-// Check if the model exists before creating it
 const User = mongoose.models.User || mongoose.model<IUser>("User", userSchema);
 
 export default User;

@@ -1,7 +1,7 @@
 "use server";
 
 import { connect } from "@/lib/mongodb/connectDB";
-import User from "@/lib/mongodb/models/user.model";
+import User from "@/lib/mongodb/models/user";
 import { currentUser } from "@clerk/nextjs/server";
 
 async function createProfile(clerkUser: any) {
