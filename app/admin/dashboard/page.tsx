@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { UserTableSkeleton } from "@/components/ui/skeleton";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
@@ -206,277 +207,273 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-3xl font-bold mb-8 dark:text-white">Dashboard</h1>
+    <motion.div>
+      <div className="container mx-auto p-6 space-y-8">
+        <h1 className="text-3xl font-bold mb-8 dark:text-white">Dashboard</h1>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {errors.stats ? (
-              <div className="col-span-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <p className="text-red-600 dark:text-red-400">{errors.stats}</p>
-                <Button onClick={fetchDashboardData} className="mt-2">
-                  Retry
-                </Button>
-              </div>
-            ) : (
-              <>
-                <StatCard
-                  title="Total Users"
-                  value={stats.totalUsers}
-                  icon={Users}
-                  color="bg-blue-50 dark:bg-blue-900/20"
-                />
-                <StatCard
-                  title="Active Members"
-                  value={stats.activeMembers}
-                  icon={CreditCard}
-                  color="bg-green-50 dark:bg-green-900/20"
-                />
-                <StatCard
-                  title="Trial Users"
-                  value={stats.trialUsers}
-                  icon={FileText}
-                  color="bg-yellow-50 dark:bg-yellow-900/20"
-                />
-                <StatCard
-                  title="Free Trial Requests"
-                  value={stats.formSubmissions}
-                  icon={TrendingUp}
-                  color="bg-purple-50 dark:bg-purple-900/20"
-                />
-              </>
-            )}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex gap-4">
-              <Link href="/admin/dashboard/plans">
-                <Button className="bg-primary hover:bg-primary/90">
-                  <CreditCard className="w-4 h-4 mr-2" /> Manage Plans
-                </Button>
-              </Link>
-              <Link href="/admin/dashboard/roles">
-                <Button className="bg-primary hover:bg-primary/90">
-                  <CreditCard className="w-4 h-4 mr-2" /> Manage roles
-                </Button>
-              </Link>
-              <Button className="bg-primary hover:bg-primary/90">
-                <Bell className="w-4 h-4 mr-2" /> Notifications
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {errors.stats ? (
+            <div className="col-span-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <p className="text-red-600 dark:text-red-400">{errors.stats}</p>
+              <Button onClick={fetchDashboardData} className="mt-2">
+                Retry
               </Button>
             </div>
+          ) : (
+            <>
+              <StatCard
+                title="Total Users"
+                value={stats.totalUsers}
+                icon={Users}
+                color="bg-blue-50 dark:bg-blue-900/20"
+              />
+              <StatCard
+                title="Active Members"
+                value={stats.activeMembers}
+                icon={CreditCard}
+                color="bg-green-50 dark:bg-green-900/20"
+              />
+              <StatCard
+                title="Trial Users"
+                value={stats.trialUsers}
+                icon={FileText}
+                color="bg-yellow-50 dark:bg-yellow-900/20"
+              />
+              <StatCard
+                title="Free Trial Requests"
+                value={stats.formSubmissions}
+                icon={TrendingUp}
+                color="bg-purple-50 dark:bg-purple-900/20"
+              />
+            </>
+          )}
+        </div>
 
-            <div className="flex space-x-4">
-              <button
-                onClick={() => handleTabChange("users")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  activeTab === "users"
-                    ? "bg-primary text-white"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
-              >
-                User Management
-              </button>
-              <button
-                onClick={() => handleTabChange("submissions")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  activeTab === "submissions"
-                    ? "bg-primary text-white"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
-              >
-                Free Trial Requests
-              </button>
-            </div>
+        {/* Quick Actions */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex gap-4">
+            <Link href="/admin/dashboard/plans">
+              <Button className="bg-primary hover:bg-primary/90">
+                <CreditCard className="w-4 h-4 mr-2" /> Manage Plans
+              </Button>
+            </Link>
+            <Link href="/admin/dashboard/roles">
+              <Button className="bg-primary hover:bg-primary/90">
+                <CreditCard className="w-4 h-4 mr-2" /> Manage roles
+              </Button>
+            </Link>
+            <Button className="bg-primary hover:bg-primary/90">
+              <Bell className="w-4 h-4 mr-2" /> Notifications
+            </Button>
           </div>
 
-          {/* Content Area */}
-          <Card className="p-6">
-            {activeTab === "users" ? (
-              <>
-                {errors.users ? (
-                  <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <p className="text-red-600 dark:text-red-400">
-                      {errors.users}
-                    </p>
-                    <Button onClick={fetchDashboardData} className="mt-2">
-                      Retry
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                      <div className="flex-1">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <Input
-                            placeholder="Search users..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => handleTabChange("users")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === "users"
+                  ? "bg-primary text-white"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              User Management
+            </button>
+            <button
+              onClick={() => handleTabChange("submissions")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === "submissions"
+                  ? "bg-primary text-white"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              Free Trial Requests
+            </button>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <Card className="p-6">
+          {activeTab === "users" ? (
+            <>
+              {loading.users ? (
+                <UserTableSkeleton />
+              ) : errors.users ? (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <p className="text-red-600 dark:text-red-400">
+                    {errors.users}
+                  </p>
+                  <Button onClick={fetchDashboardData} className="mt-2">
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <Input
+                          placeholder="Search users..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10"
+                        />
                       </div>
-                      <select
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                      >
-                        {statusOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
+                    </div>
+                    <select
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b dark:border-gray-700">
+                          <th className="text-left py-4 px-6 font-medium">
+                            Name
+                          </th>
+                          <th className="text-left py-4 px-6 font-medium">
+                            Email
+                          </th>
+                          <th className="text-left py-4 px-6 font-medium">
+                            Status
+                          </th>
+                          <th className="text-left py-4 px-6 font-medium">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredUsers.map((user) => (
+                          <tr
+                            key={user.id}
+                            className="border-b dark:border-gray-700"
+                          >
+                            <td className="py-4 px-6">
+                              {user.first_name} {user.last_name}
+                            </td>
+                            <td className="py-4 px-6">{user.email}</td>
+                            <td className="py-4 px-6">
+                              <span
+                                className={`px-3 py-1 rounded-full text-sm ${
+                                  user.membership_status === "active"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                    : user.membership_status === "trial"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+                                }`}
+                              >
+                                {user.membership_status}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  router.push(
+                                    `/admin/dashboard/users/${user.id}`
+                                  )
+                                }
+                              >
+                                View Details
+                              </Button>
+                            </td>
+                          </tr>
                         ))}
-                      </select>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b dark:border-gray-700">
-                            <th className="text-left py-4 px-6 font-medium">
-                              Name
-                            </th>
-                            <th className="text-left py-4 px-6 font-medium">
-                              Email
-                            </th>
-                            <th className="text-left py-4 px-6 font-medium">
-                              Status
-                            </th>
-                            <th className="text-left py-4 px-6 font-medium">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredUsers.map((user) => (
-                            <tr
-                              key={user.id}
-                              className="border-b dark:border-gray-700"
-                            >
-                              <td className="py-4 px-6">
-                                {user.first_name} {user.last_name}
-                              </td>
-                              <td className="py-4 px-6">{user.email}</td>
-                              <td className="py-4 px-6">
-                                <span
-                                  className={`px-3 py-1 rounded-full text-sm ${
-                                    user.membership_status === "active"
-                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                      : user.membership_status === "trial"
-                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                                      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-                                  }`}
-                                >
-                                  {user.membership_status}
-                                </span>
-                              </td>
-                              <td className="py-4 px-6">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    router.push(
-                                      `/admin/dashboard/users/${user.id}`
-                                    )
-                                  }
-                                >
-                                  View Details
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                {errors.trials ? (
-                  <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <p className="text-red-600 dark:text-red-400">
-                      {errors.trials}
-                    </p>
-                    <Button onClick={fetchDashboardData} className="mt-2">
-                      Retry
-                    </Button>
+                      </tbody>
+                    </table>
                   </div>
-                ) : (
-                  <>
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                      <div className="flex-1">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <Input
-                            placeholder="Search free trial requests..."
-                            value={submissionSearchQuery}
-                            onChange={(e) =>
-                              setSubmissionSearchQuery(e.target.value)
-                            }
-                            className="pl-10"
-                          />
-                        </div>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              {errors.trials ? (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <p className="text-red-600 dark:text-red-400">
+                    {errors.trials}
+                  </p>
+                  <Button onClick={fetchDashboardData} className="mt-2">
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <Input
+                          placeholder="Search free trial requests..."
+                          value={submissionSearchQuery}
+                          onChange={(e) =>
+                            setSubmissionSearchQuery(e.target.value)
+                          }
+                          className="pl-10"
+                        />
                       </div>
                     </div>
+                  </div>
 
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b dark:border-gray-700">
-                            <th className="text-left py-4 px-6 font-medium">
-                              Name
-                            </th>
-                            <th className="text-left py-4 px-6 font-medium">
-                              Email
-                            </th>
-                            <th className="text-left py-4 px-6 font-medium">
-                              Phone
-                            </th>
-                            <th className="text-left py-4 px-6 font-medium">
-                              Submitted At
-                            </th>
-                            <th className="text-left py-4 px-6 font-medium">
-                              Goals
-                            </th>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b dark:border-gray-700">
+                          <th className="text-left py-4 px-6 font-medium">
+                            Name
+                          </th>
+                          <th className="text-left py-4 px-6 font-medium">
+                            Email
+                          </th>
+                          <th className="text-left py-4 px-6 font-medium">
+                            Phone
+                          </th>
+                          <th className="text-left py-4 px-6 font-medium">
+                            Submitted At
+                          </th>
+                          <th className="text-left py-4 px-6 font-medium">
+                            Goals
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRequests.map((request) => (
+                          <tr
+                            key={request._id}
+                            className="border-b dark:border-gray-700"
+                          >
+                            <td className="py-4 px-6">
+                              {request.firstName} {request.lastName}
+                            </td>
+                            <td className="py-4 px-6">{request.email}</td>
+                            <td className="py-4 px-6">{request.phone}</td>
+                            <td className="py-4 px-6">
+                              {format(new Date(request.createdAt), "PPp")}
+                            </td>
+                            <td className="py-4 px-6">
+                              {request.fitnessGoals || "Not specified"}
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {filteredRequests.map((request) => (
-                            <tr
-                              key={request._id}
-                              className="border-b dark:border-gray-700"
-                            >
-                              <td className="py-4 px-6">
-                                {request.firstName} {request.lastName}
-                              </td>
-                              <td className="py-4 px-6">{request.email}</td>
-                              <td className="py-4 px-6">{request.phone}</td>
-                              <td className="py-4 px-6">
-                                {format(new Date(request.createdAt), "PPp")}
-                              </td>
-                              <td className="py-4 px-6">
-                                {request.fitnessGoals || "Not specified"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </Card>
-        </motion.div>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </Card>
       </div>
-    </main>
+    </motion.div>
   );
 }
