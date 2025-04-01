@@ -1,10 +1,7 @@
 import { Webhook, WebhookRequiredHeaders } from "svix";
 import { headers } from "next/headers";
-import {
-  createOrUpdateUser,
-  deleteUser,
-} from "@/lib/mongodb/controllers/userController";
 import { NextResponse } from "next/server";
+import { createOrUpdateUser, deleteUser } from "@/app/actions/users";
 
 interface WebhookEvent {
   data: {

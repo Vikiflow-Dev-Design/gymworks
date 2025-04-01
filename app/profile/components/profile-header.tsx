@@ -29,6 +29,7 @@ export default function ProfileHeader({
   const { user } = useUser();
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   return (
     <div className="flex items-center justify-between mb-6">
@@ -72,9 +73,23 @@ export default function ProfileHeader({
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your
-                account and remove your data from our servers.
+              <AlertDialogDescription className="space-y-4">
+                <p>
+                  This action cannot be undone. This will permanently delete
+                  your account and remove your data from our servers.
+                </p>
+                <div className="mt-4">
+                  <p className="mb-2 font-medium">
+                    Please type "delete my account" to confirm:
+                  </p>
+                  <input
+                    type="text"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-destructive"
+                    placeholder="Type here to confirm"
+                  />
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -82,6 +97,10 @@ export default function ProfileHeader({
               <AlertDialogAction
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 onClick={async () => {
+                  if (confirmText !== "delete my account") {
+                    toast.error("Please type 'delete my account' to confirm");
+                    return;
+                  }
                   setIsDeleting(true);
                   try {
                     await user?.delete();
@@ -93,6 +112,7 @@ export default function ProfileHeader({
                     toast.error("Failed to delete account");
                   } finally {
                     setIsDeleting(false);
+                    setConfirmText("");
                   }
                 }}
                 disabled={isDeleting}

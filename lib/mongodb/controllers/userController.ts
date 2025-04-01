@@ -5,45 +5,6 @@ interface EmailAddress {
   email_address: string;
 }
 
-export const createOrUpdateUser = async (
-  id: string,
-  first_name: string,
-  last_name: string,
-  image_url: string,
-  email_addresses: EmailAddress[],
-  username: string
-) => {
-  try {
-    await connect();
-
-    const userEmail = email_addresses[0].email_address;
-
-    const user = await User.findOneAndUpdate(
-      { clerkId: id },
-      {
-        clerkId: id,
-        firstName: first_name,
-        lastName: last_name,
-        avatar: image_url,
-        email: userEmail,
-        username: username,
-        role: "",
-        phone: "",
-        address: "",
-        city: "",
-        state: "",
-        postalCode: null,
-      },
-      { new: true, upsert: true }
-    );
-
-    return user;
-  } catch (error) {
-    console.log("Error creating or updating user:", error);
-    throw error;
-  }
-};
-
 export const deleteUser = async (id: string): Promise<void> => {
   try {
     await connect();

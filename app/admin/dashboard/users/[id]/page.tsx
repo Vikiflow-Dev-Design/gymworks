@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { getUserById, deleteUser } from "@/app/actions/users";
+import { getUserById, deleteClerkUser } from "@/app/actions/users";
 import { getUserMemberships } from "@/app/actions/membership";
 import { useRouter } from "next/navigation";
 import {
@@ -83,7 +83,7 @@ export default function UserDetails({ params }: { params: { id: string } }) {
 
     try {
       setIsDeleting(true);
-      await deleteUser(user.clerk_id);
+      await deleteClerkUser(user.clerk_id);
       toast.success("User deleted successfully");
       router.push("/admin/dashboard");
     } catch (error) {

@@ -1,8 +1,52 @@
 "use server";
 
 import { connect } from "@/lib/mongodb/connectDB";
+import Membership from "@/lib/mongodb/models/Membership";
 import User from "@/lib/mongodb/models/user";
 import { User as UserType } from "@/types/user";
+
+interface EmailAddress {
+  email_address: string;
+}
+
+export const createOrUpdateUser = async (
+  id: string,
+  first_name: string,
+  last_name: string,
+  image_url: string,
+  email_addresses: EmailAddress[],
+  username: string
+) => {
+  try {
+    await connect();
+
+    const userEmail = email_addresses[0].email_address;
+
+    const user = await User.findOneAndUpdate(
+      { clerkId: id },
+      {
+        clerkId: id,
+        firstName: first_name,
+        lastName: last_name,
+        avatar: image_url,
+        email: userEmail,
+        username: username,
+        role: "",
+        phone: "",
+        address: "",
+        city: "",
+        state: "",
+        postalCode: null,
+      },
+      { new: true, upsert: true }
+    );
+
+    return user;
+  } catch (error) {
+    console.log("Error creating or updating user:", error);
+    throw error;
+  }
+};
 
 export async function getUsers(): Promise<{ users: UserType[] }> {
   try {
@@ -131,23 +175,35 @@ export async function updateUserRole(
   }
 }
 
+export async function deleteClerkUser(clerkId: string) {
+  try {
+    const { clerkClient } = await import("@clerk/nextjs/server");
+    const clerk = await clerkClient();
+    await clerk.users.deleteUser(clerkId);
+    return { success: true, message: "Clerk user deleted successfully" };
+  } catch (error) {
+    console.error("Failed to delete Clerk user:", error);
+    throw new Error("Failed to delete Clerk user");
+  }
+}
+
 export async function deleteUser(clerkId: string) {
   try {
     await connect();
 
-    // Delete from MongoDB
+    // Find user to get their MongoDB ID
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Delete all memberships associated with the user
+    await Membership.deleteMany({ userId: clerkId });
+
+    // Delete user from MongoDB
     await User.findOneAndDelete({ clerkId });
 
-    // Delete from Clerk
-    const { clerkClient } = await import("@clerk/nextjs/server");
-
-    await clerkClient.users.deleteUser(clerkId);
-
-    const clerk_client = await clerkClient();
-
-    console.log("clerkClient......................", clerk_client);
-
-    return { success: true };
+    return { success: true, message: "User deleted successfully" };
   } catch (error) {
     console.error("Failed to delete user:", error);
     throw new Error("Failed to delete user");
