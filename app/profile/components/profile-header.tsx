@@ -32,9 +32,9 @@ export default function ProfileHeader({
   const [confirmText, setConfirmText] = useState("");
 
   return (
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center space-x-4">
-        <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 mb-6">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+        <div className="w-20 sm:w-16 h-20 sm:h-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
           {user?.imageUrl ? (
             <img
               src={user.imageUrl}
@@ -44,7 +44,7 @@ export default function ProfileHeader({
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400">
               <svg
-                className="w-8 h-8"
+                className="w-10 sm:w-8 h-10 sm:h-8"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -60,15 +60,23 @@ export default function ProfileHeader({
             </div>
           )}
         </div>
-        <h1 className="text-3xl font-bold">{user?.username}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">
+          {user?.username}
+        </h1>
       </div>
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
+      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <Button
+          className="w-full sm:w-auto"
+          variant="outline"
+          onClick={() => setIsEditing(!isEditing)}
+        >
           {isEditing ? "Cancel" : "Edit Profile"}
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive">Delete Account</Button>
+            <Button className="w-full sm:w-auto" variant="destructive">
+              Delete Account
+            </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>

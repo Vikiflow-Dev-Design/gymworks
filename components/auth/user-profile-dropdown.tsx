@@ -17,7 +17,13 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 
-export default function UserProfileDropdown() {
+interface UserProfileDropdownProps {
+  setMobileMenuOpen?: (isOpen: boolean) => void;
+}
+
+export default function UserProfileDropdown({
+  setMobileMenuOpen,
+}: UserProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -42,6 +48,7 @@ export default function UserProfileDropdown() {
     await signOut();
     router.push("/");
     setIsOpen(false);
+    setMobileMenuOpen?.(false);
   };
 
   if (!isLoaded) {
@@ -108,7 +115,10 @@ export default function UserProfileDropdown() {
                   key={item.href}
                   href={item.href}
                   className="flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    setIsOpen(false);
+                    setMobileMenuOpen?.(false);
+                  }}
                 >
                   <item.icon className="w-4 h-4" />
                   <span>{item.label}</span>

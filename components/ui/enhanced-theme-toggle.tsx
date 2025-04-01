@@ -14,16 +14,19 @@ export function EnhancedThemeToggle({
 
   const sizeClasses = {
     default: {
-      container: "px-4 py-2",
-      button: "px-3 py-2 space-x-2",
-      icon: "h-5 w-5",
-      text: "block",
+      container: "px-4 py-2 lg:px-4 lg:py-2 md:px-3 md:py-1.5 sm:px-2 sm:py-1",
+      button:
+        "px-3 py-2 lg:px-3 lg:py-2 md:px-2 md:py-1.5 sm:px-1.5 sm:py-1 space-x-2 sm:space-x-1.5",
+      icon: "h-5 w-5 lg:h-5 lg:w-5 md:h-4 md:w-4 sm:h-3.5 sm:w-3.5",
+      text: "block lg:block md:text-sm sm:text-xs",
     },
     sm: {
-      container: "px-3 py-2",
-      button: "px-3 py-1.5 space-x-2",
-      icon: "h-4 w-4",
-      text: "block lg:hidden",
+      container:
+        "px-3 py-2 lg:px-3 lg:py-2 md:px-2 md:py-1.5 sm:px-1.5 sm:py-1",
+      button:
+        "px-3 py-1.5 lg:px-3 lg:py-1.5 md:px-2 md:py-1 sm:px-1.5 sm:py-0.5 space-x-2 sm:space-x-1.5",
+      icon: "h-4 w-4 lg:h-4 lg:w-4 md:h-3.5 md:w-3.5 sm:h-3 sm:w-3",
+      text: "block lg:hidden md:text-sm sm:text-xs",
     },
   }[size];
 

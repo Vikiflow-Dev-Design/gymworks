@@ -73,7 +73,7 @@ const Navbar = () => {
               </div>
             </SignedOut>
             <SignedIn>
-              <UserProfileDropdown />
+              <UserProfileDropdown setMobileMenuOpen={setIsOpen} />
             </SignedIn>
           </div>
           {/* Mobile Menu Button */}
@@ -129,7 +129,7 @@ const Navbar = () => {
                   </div>
                 </SignedOut>
                 <SignedIn>
-                  <UserProfileDropdown />
+                  <UserProfileDropdown setMobileMenuOpen={setIsOpen} />
                 </SignedIn>
               </div>
             </div>
