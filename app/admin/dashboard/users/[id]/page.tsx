@@ -122,7 +122,7 @@ export default function UserDetails({ params }: { params: { id: string } }) {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-8">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -132,34 +132,32 @@ export default function UserDetails({ params }: { params: { id: string } }) {
           {/* Back Button */}
           <Link
             href="/admin/dashboard"
-            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-4 sm:mb-6"
+            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Link>
 
           {/* User Profile Header */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-0">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+            <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold mb-2 dark:text-white">
+                <h1 className="text-2xl font-bold mb-2 dark:text-white">
                   {user.first_name} {user.last_name}
                 </h1>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 text-gray-500 dark:text-gray-400">
+                <div className="flex items-center space-x-4 text-gray-500 dark:text-gray-400">
                   <span className="flex items-center">
                     <Mail className="w-4 h-4 mr-2" />
-                    <span className="text-sm break-all">{user.email}</span>
+                    {user.email}
                   </span>
                   <span className="flex items-center">
                     <Clock className="w-4 h-4 mr-2" />
-                    <span className="text-sm">
-                      Joined {new Date(user.created_at).toLocaleDateString()}
-                    </span>
+                    Joined {new Date(user.created_at).toLocaleDateString()}
                   </span>
                 </div>
               </div>
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-medium self-start ${
+              {/* <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
                   user.membership_status === "active"
                     ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                     : user.membership_status === "trial"
@@ -171,18 +169,18 @@ export default function UserDetails({ params }: { params: { id: string } }) {
                   .charAt(0)
                   .toUpperCase() +
                   (user.membership_status || "inactive").slice(1)}
-              </span>
+              </span> */}
             </div>
           </div>
 
           {/* User Details Grid */}
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 gap-6 mb-6">
             {/* Personal Information */}
             <Card className="p-4">
               <h2 className="text-lg font-semibold mb-3 dark:text-white">
                 Personal Information
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Phone Number
@@ -230,136 +228,6 @@ export default function UserDetails({ params }: { params: { id: string } }) {
           </div>
 
           {/* Membership History */}
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold dark:text-white mb-2 sm:mb-0">
-                Membership History
-              </h2>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  onClick={() =>
-                    router.push(`/admin/dashboard/memberships/${user._id}`)
-                  }
-                >
-                  View All Memberships
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="w-full sm:w-auto"
-                    >
-                      Delete User
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="max-w-md mx-4 sm:mx-auto">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete User Account</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete the user account and all associated data.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-                      <AlertDialogCancel className="w-full sm:w-auto">
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        onClick={handleDeleteUser}
-                        disabled={isDeleting}
-                      >
-                        {isDeleting ? "Deleting..." : "Delete User"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-
-            {memberships.length === 0 ? (
-              <Card className="p-4 text-center">
-                <div className="flex flex-col items-center py-6">
-                  <CreditCard className="w-12 h-12 text-gray-400 mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">
-                    No membership history found
-                  </p>
-                </div>
-              </Card>
-            ) : (
-              memberships.map((membership, index) => (
-                <Card key={membership._id} className="p-4">
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-                      <div>
-                        <h3 className="text-lg font-semibold dark:text-white">
-                          {membership.planName}
-                        </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Plan ID: {membership.planId}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            membership.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {membership.status.charAt(0).toUpperCase() +
-                            membership.status.slice(1)}
-                        </span>
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            membership.paymentStatus === "paid"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {membership.paymentStatus.charAt(0).toUpperCase() +
-                            membership.paymentStatus.slice(1)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Start Date
-                        </p>
-                        <p className="font-medium dark:text-white">
-                          {new Date(membership.startDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Renewal Date
-                        </p>
-                        <p className="font-medium dark:text-white">
-                          {new Date(
-                            membership.renewalDate
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          End Date
-                        </p>
-                        <p className="font-medium dark:text-white">
-                          {new Date(membership.endDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold dark:text-white">
