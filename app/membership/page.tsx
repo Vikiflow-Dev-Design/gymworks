@@ -82,7 +82,7 @@ export default function Membership() {
   );
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [activeMemberships, setActiveMemberships] = useState<
+  const [subscribedMemberships, setSubscribedMemberships] = useState<
     Record<string, MembershipDocument>
   >({});
   const router = useRouter();
@@ -102,7 +102,7 @@ export default function Membership() {
               membershipsMap[plan._id] = membership;
             }
           }
-          setActiveMemberships(membershipsMap);
+          setSubscribedMemberships(membershipsMap);
         }
       } catch (error) {
         console.error("Error fetching plans:", error);
@@ -466,7 +466,11 @@ export default function Membership() {
                 <Button
                   className="w-full"
                   size="lg"
-                  disabled={processingPayment}
+                  disabled={
+                    processingPayment ||
+                    (subscribedMemberships[plan._id] &&
+                      subscribedMemberships[plan._id].status === "active")
+                  }
                   onClick={() => handleSubscribe(plan._id)}
                 >
                   {processingPayment ? (
@@ -474,8 +478,12 @@ export default function Membership() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Processing...
                     </>
-                  ) : activeMemberships[plan._id] ? (
-                    "Renew Plan"
+                  ) : subscribedMemberships[plan._id] ? (
+                    subscribedMemberships[plan._id].status === "active" ? (
+                      "Already Active"
+                    ) : (
+                      "Renew Plan"
+                    )
                   ) : (
                     "Get Started"
                   )}

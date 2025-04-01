@@ -112,15 +112,17 @@ async function handleSuccessfulPayment(data: any) {
 
     if (existingMembership) {
       // For renewal, create new membership period
+
+      if (existingMembership.status === "active") {
+        return { success: false, message: "Membership already active" };
+      }
+
       await Membership.updateOne({
         planName: plan.name,
         price: plan.price,
         features: plan.features,
-        renewalDate: new Date(existingMembership.endDate), // renew from end of current membership
-        endDate: calculateEndDate(
-          new Date(existingMembership.endDate),
-          plan.duration
-        ),
+        renewalDate: new Date(), // renew from current date
+        endDate: calculateEndDate(new Date(), plan.duration),
         status: "active",
         paymentStatus: "paid",
         renewedFrom: existingMembership._id,
