@@ -108,6 +108,7 @@ async function handleSuccessfulPayment(data: any) {
     });
 
     const startDate = new Date();
+    const renewalDate = new Date();
     const endDate = calculateEndDate(startDate, plan.duration);
 
     if (existingMembership) {
@@ -136,6 +137,7 @@ async function handleSuccessfulPayment(data: any) {
         price: plan.price,
         features: plan.features,
         startDate,
+        renewalDate,
         endDate,
         status: "active",
         paymentStatus: "paid",

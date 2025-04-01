@@ -38,6 +38,7 @@ type Membership = {
   planName: string;
   price: number;
   startDate: string;
+  renewalDate: string;
   endDate: string;
   status: string;
   paymentStatus: string;
@@ -276,6 +277,17 @@ export default function UserDetails({ params }: { params: { id: string } }) {
                             <p className="font-medium">
                               {new Date(
                                 membership.startDate
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                          <Calendar className="w-4 h-4" />
+                          <div>
+                            <p className="text-xs">Start Date</p>
+                            <p className="font-medium">
+                              {new Date(
+                                membership.renewalDate
                               ).toLocaleDateString()}
                             </p>
                           </div>

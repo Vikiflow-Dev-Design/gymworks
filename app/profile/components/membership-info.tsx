@@ -11,6 +11,7 @@ interface MembershipData {
   planName: string;
   price: number;
   startDate: string;
+  renewalDate: string;
   endDate: string;
   status: string;
   features: string[];
@@ -44,8 +45,9 @@ export default function MembershipInfo({ profile }: MembershipInfoProps) {
             .map((m) => ({
               planName: m.planName,
               price: m.price,
-              startDate: format(new Date(m.startDate), "PPP"),
               endDate: format(new Date(m.endDate), "PPP"),
+              startDate: format(new Date(m.startDate), "PPP"),
+              renewalDate: format(new Date(m.renewalDate), "PPP"),
               status: m.status,
               features: m.features,
               paymentStatus: m.paymentStatus,
@@ -168,6 +170,13 @@ export default function MembershipInfo({ profile }: MembershipInfoProps) {
                   <div>
                     <p className="text-xs">Start Date</p>
                     <p className="font-medium">{membership.startDate}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                  <Clock className="w-4 h-4" />
+                  <div>
+                    <p className="text-xs">End Date</p>
+                    <p className="font-medium">{membership.renewalDate}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
