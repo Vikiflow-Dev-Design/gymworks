@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-function Skeleton({
+export function Skeleton({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
@@ -36,10 +36,7 @@ export function UserTableSkeleton() {
           </div>
         </div>
         {Array.from({ length: 5 }).map((_, index) => (
-          <div
-            key={index}
-            className="border-b px-4 py-4 last:border-none"
-          >
+          <div key={index} className="border-b px-4 py-4 last:border-none">
             <div className="flex items-center justify-between">
               <Skeleton className="h-5 w-[150px]" />
               <Skeleton className="h-5 w-[120px]" />

@@ -271,3 +271,43 @@ export async function cancelMembership(
     throw new Error("Failed to cancel membership");
   }
 }
+
+// Function to check and update expired memberships
+export async function checkExpiredMemberships() {
+  try {
+    await connect();
+    const currentDate = new Date();
+
+    // Find all active memberships that have expired
+    const expiredMemberships = await Membership.find({
+      status: "active",
+      endDate: { $lte: currentDate },
+    });
+
+    // Update status to expired for all expired memberships
+    const updatePromises = expiredMemberships.map((membership) =>
+      Membership.findByIdAndUpdate(
+        membership._id,
+        { status: "expired" },
+        { new: true }
+      )
+    );
+
+    const updatedMemberships = await Promise.all(updatePromises);
+
+    return {
+      success: true,
+      updatedCount: updatedMemberships.length,
+      updatedMemberships: updatedMemberships.map(serializeMembership),
+    };
+  } catch (error) {
+    console.error("Error checking expired memberships:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to check expired memberships",
+    };
+  }
+}

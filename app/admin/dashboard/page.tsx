@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserTableSkeleton } from "@/components/ui/skeleton";
+import { FreeTrialSubmissionsSkeleton } from "@/app/components/skeletons/FreeTrialSubmissionsSkeleton";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
@@ -253,6 +254,11 @@ export default function AdminDashboard() {
                 <CreditCard className="w-4 h-4 mr-2" /> Manage roles
               </Button>
             </Link>
+            <Link href="/admin/dashboard/expired-memberships">
+              <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
+                <CreditCard className="w-4 h-4 mr-2" /> Expired Memberships
+              </Button>
+            </Link>
             <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
               <Bell className="w-4 h-4 mr-2" /> Notifications
             </Button>
@@ -370,7 +376,9 @@ export default function AdminDashboard() {
             </>
           ) : (
             <>
-              {errors.trials ? (
+              {loading.trials ? (
+                <FreeTrialSubmissionsSkeleton />
+              ) : errors.trials ? (
                 <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                   <p className="text-red-600 dark:text-red-400">
                     {errors.trials}

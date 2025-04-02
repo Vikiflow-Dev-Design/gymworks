@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { SubmissionDetailsSkeleton } from "@/app/components/skeletons/SubmissionDetailsSkeleton";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { mockFormSubmissions } from "@/data/dashboard";
+import { getFreeTrialRequest } from "@/app/actions/getFreeTrialRequest";
 import {
   Select,
   SelectContent,
@@ -21,10 +22,19 @@ export default function SubmissionDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching submission data
-    const fetchSubmission = () => {
-      const found = mockFormSubmissions.find((s) => s.id === id);
-      setSubmission(found || null);
+    const fetchSubmission = async () => {
+      try {
+        const response = await getFreeTrialRequest(id as string);
+        if (response.success) {
+          setSubmission(response.data);
+        } else {
+          console.error(response.error);
+          setSubmission(null);
+        }
+      } catch (error) {
+        console.error("Error fetching submission:", error);
+        setSubmission(null);
+      }
       setLoading(false);
     };
 
@@ -43,17 +53,13 @@ export default function SubmissionDetails() {
       // Show success message (you might want to add a toast notification here)
       console.log(`Status successfully updated to ${newStatus}`);
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error("Error updating status:", error);
       // Handle error (you might want to add error notification here)
     }
   };
 
   if (loading) {
-    return (
-      <div className="p-8 flex justify-center items-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
+    return <SubmissionDetailsSkeleton />;
   }
 
   if (!submission) {
@@ -111,7 +117,7 @@ export default function SubmissionDetails() {
                     Name
                   </label>
                   <p className="text-lg font-medium dark:text-white">
-                    {submission.name}
+                    {`${submission.firstName} ${submission.lastName}`}
                   </p>
                 </div>
                 <div>
@@ -145,7 +151,11 @@ export default function SubmissionDetails() {
                     </label>
                     <div className="flex items-center space-x-4">
                       <span
-                        className={`px-2 py-1 text-sm font-semibold rounded-full ${statusColors[submission.status as keyof typeof statusColors]}`}
+                        className={`px-2 py-1 text-sm font-semibold rounded-full ${
+                          statusColors[
+                            submission.status as keyof typeof statusColors
+                          ]
+                        }`}
                       >
                         {submission.status.charAt(0).toUpperCase() +
                           submission.status.slice(1)}
@@ -170,7 +180,7 @@ export default function SubmissionDetails() {
                       Submitted At
                     </label>
                     <p className="text-lg font-medium dark:text-white">
-                      {new Date(submission.submittedAt).toLocaleString()}
+                      {new Date(submission.createdAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
