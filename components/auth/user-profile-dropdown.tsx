@@ -13,6 +13,7 @@ import {
   Dumbbell,
   Heart,
   ChevronDown,
+  LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,6 +30,7 @@ export default function UserProfileDropdown({
   const router = useRouter();
   const { signOut } = useClerk();
   const { user, isLoaded } = useUser();
+  const isAdmin = user?.publicMetadata.role === "admin";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,7 +59,18 @@ export default function UserProfileDropdown({
 
   if (!user) return null;
 
-  const menuItems = [{ label: "Profile", icon: User, href: "/profile" }];
+  const menuItems = [
+    { label: "Profile", icon: User, href: "/profile" },
+    ...(isAdmin
+      ? [
+          {
+            label: "Admin Dashboard",
+            icon: LayoutDashboard,
+            href: "/admin/dashboard",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="relative" ref={dropdownRef}>
