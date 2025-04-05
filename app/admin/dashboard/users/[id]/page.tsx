@@ -284,7 +284,7 @@ export default function UserDetails({ params }: { params: { id: string } }) {
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                           <Calendar className="w-4 h-4" />
                           <div>
-                            <p className="text-xs">Start Date</p>
+                            <p className="text-xs">Renewal Date</p>
                             <p className="font-medium">
                               {new Date(
                                 membership.renewalDate

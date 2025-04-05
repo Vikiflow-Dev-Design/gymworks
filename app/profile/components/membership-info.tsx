@@ -175,7 +175,7 @@ export default function MembershipInfo({ profile }: MembershipInfoProps) {
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                   <Clock className="w-4 h-4" />
                   <div>
-                    <p className="text-xs">End Date</p>
+                    <p className="text-xs">Renewal Date</p>
                     <p className="font-medium">{membership.renewalDate}</p>
                   </div>
                 </div>

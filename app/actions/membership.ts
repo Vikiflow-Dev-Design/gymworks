@@ -311,3 +311,28 @@ export async function checkExpiredMemberships() {
     };
   }
 }
+
+export async function getAllExpiredMemberships() {
+  try {
+    await connect();
+
+    // Find all memberships with expired status
+    const expiredMemberships = await Membership.find({ status: "expired" })
+      .populate("userId", "firstName lastName email")
+      .populate("planId", "name duration");
+
+    return {
+      success: true,
+      expiredMemberships: expiredMemberships.map(serializeMembership),
+    };
+  } catch (error) {
+    console.error("Error fetching expired memberships:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch expired memberships",
+    };
+  }
+}

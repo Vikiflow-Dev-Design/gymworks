@@ -41,10 +41,10 @@ export default function ExpiredMemberships() {
 
   const fetchExpiredMemberships = async () => {
     try {
-      const response = await fetch("/api/cron/check-memberships");
+      const response = await fetch("/api/memberships/expired");
       const data = await response.json();
-      if (data.success && Array.isArray(data.updatedMemberships)) {
-        setExpiredMemberships(data.updatedMemberships);
+      if (data.success && Array.isArray(data.expiredMemberships)) {
+        setExpiredMemberships(data.expiredMemberships);
       } else {
         setExpiredMemberships([]);
         console.error("Error fetching expired memberships:", data.error);

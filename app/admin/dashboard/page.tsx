@@ -254,14 +254,14 @@ export default function AdminDashboard() {
                 <CreditCard className="w-4 h-4 mr-2" /> Manage roles
               </Button>
             </Link>
-            <Link href="/admin/dashboard/expired-memberships">
+            {/* <Link href="/admin/dashboard/expired-memberships">
               <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
                 <CreditCard className="w-4 h-4 mr-2" /> Expired Memberships
               </Button>
             </Link>
             <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
               <Bell className="w-4 h-4 mr-2" /> Notifications
-            </Button>
+            </Button> */}
           </div>
 
           <div className="flex flex-wrap gap-2 sm:gap-4 mt-4 sm:mt-0">
