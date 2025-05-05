@@ -254,12 +254,12 @@ export default function AdminDashboard() {
                 <CreditCard className="w-4 h-4 mr-2" /> Manage roles
               </Button>
             </Link>
-            {/* <Link href="/admin/dashboard/expired-memberships">
+            <Link href="/admin/dashboard/memberships">
               <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
-                <CreditCard className="w-4 h-4 mr-2" /> Expired Memberships
+                <CreditCard className="w-4 h-4 mr-2" /> Manage Memberships
               </Button>
             </Link>
-            <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
+            {/* <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
               <Bell className="w-4 h-4 mr-2" /> Notifications
             </Button> */}
           </div>
