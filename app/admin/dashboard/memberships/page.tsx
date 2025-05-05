@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import {
   Search,
@@ -289,47 +289,35 @@ export default function MembershipsPage() {
 
     return (
       <>
-        <div className="overflow-x-auto min-h-[50vh]">
+        <div className="overflow-x-hidden min-h-[50vh]">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-900">
-                <TableHead className="font-medium text-gray-700 dark:text-gray-300 w-[200px]">
-                  <div className="flex items-center gap-2">
+                <TableHead className="font-medium text-gray-700 dark:text-gray-300 w-[140px] md:w-[200px]">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <User className="h-4 w-4" />
-                    Member
+                    <span>Member</span>
                   </div>
                 </TableHead>
                 <TableHead className="font-medium text-gray-700 dark:text-gray-300">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <Mail className="h-4 w-4" />
-                    Email
+                    <span>Email</span>
                   </div>
                 </TableHead>
                 <TableHead className="font-medium text-gray-700 dark:text-gray-300">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <Package className="h-4 w-4" />
-                    Plan
+                    <span>Plan</span>
                   </div>
                 </TableHead>
-                <TableHead className="font-medium text-gray-700 dark:text-gray-300">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Start Date
-                  </div>
-                </TableHead>
-                <TableHead className="font-medium text-gray-700 dark:text-gray-300">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    End Date
-                  </div>
-                </TableHead>
-                <TableHead className="font-medium text-gray-700 dark:text-gray-300">
+                <TableHead className="font-medium text-gray-700 dark:text-gray-300 hidden md:table-cell">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     Status
                   </div>
                 </TableHead>
-                <TableHead className="font-medium text-gray-700 dark:text-gray-300">
+                <TableHead className="font-medium text-gray-700 dark:text-gray-300 hidden md:table-cell">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     Payment
@@ -348,13 +336,13 @@ export default function MembershipsPage() {
                 >
                   <TableCell className="font-medium">
                     {membership.user ? (
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <div className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs md:text-sm">
                           {membership.user.firstName.charAt(0)}
                           {membership.user.lastName.charAt(0)}
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 dark:text-white text-sm md:text-base truncate max-w-[120px] md:max-w-full">
                             {membership.user.firstName}{" "}
                             {membership.user.lastName}
                           </p>
@@ -368,9 +356,25 @@ export default function MembershipsPage() {
                   </TableCell>
                   <TableCell>
                     {membership.user ? (
-                      <span className="text-gray-600 dark:text-gray-300">
-                        {membership.user.email}
-                      </span>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-300 md:block hidden">
+                          {membership.user.email}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-300 md:hidden block">
+                          {membership.user.email.length > 15
+                            ? `${membership.user.email.substring(0, 15)}...`
+                            : membership.user.email}
+                        </span>
+                        <div className="md:hidden mt-1 flex gap-1">
+                          <Badge
+                            className={`text-xs py-0 px-2 ${getStatusColor(
+                              membership.status
+                            )}`}
+                          >
+                            {membership.status}
+                          </Badge>
+                        </div>
+                      </div>
                     ) : (
                       <span className="text-gray-500 dark:text-gray-400">
                         N/A
@@ -398,22 +402,12 @@ export default function MembershipsPage() {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <span className="text-gray-600 dark:text-gray-300">
-                      {format(new Date(membership.startDate), "MMM dd, yyyy")}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-gray-600 dark:text-gray-300">
-                      {format(new Date(membership.endDate), "MMM dd, yyyy")}
-                    </span>
-                  </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Badge className={getStatusColor(membership.status)}>
                       {membership.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Badge
                       className={getPaymentStatusColor(
                         membership.paymentStatus
@@ -427,7 +421,8 @@ export default function MembershipsPage() {
                       href={`/admin/dashboard/memberships/${membership._id}`}
                     >
                       <Button variant="outline" size="sm" className="w-full">
-                        View Details
+                        <span className="md:block hidden">View Details</span>
+                        <span className="md:hidden block">View</span>
                       </Button>
                     </Link>
                   </TableCell>

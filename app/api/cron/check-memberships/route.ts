@@ -5,11 +5,14 @@ export async function GET() {
     const result = await checkExpiredMemberships();
     return Response.json(result);
   } catch (error) {
-    console.error('Error in cron job:', error);
+    console.error("Error in cron job:", error);
     return Response.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to check memberships' 
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to check memberships",
       },
       { status: 500 }
     );

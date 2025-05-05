@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema, model, models } from "mongoose";
 
 export type MembershipStatus = "active" | "expired" | "cancelled" | "pending";
-export type PaymentStatus = "paid" | "pending" | "failed";
+export type PaymentStatus = "paid" | "pending" | "failed" | "expired";
 
 export interface IMembership extends Document {
   userId: string;
@@ -69,7 +69,7 @@ const membershipSchema = new Schema<IMembership>(
     ],
     paymentStatus: {
       type: String,
-      enum: ["paid", "pending", "failed"],
+      enum: ["paid", "pending", "failed", "expired"],
       default: "pending",
       required: true,
     },

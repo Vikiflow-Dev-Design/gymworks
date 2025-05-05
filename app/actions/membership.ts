@@ -314,7 +314,7 @@ export async function cancelMembership(
   }
 }
 
-// Function to check and update expired memberships
+// Function to check and update expired memberships (sets both status and paymentStatus to expired)
 export async function checkExpiredMemberships() {
   try {
     await connect();
@@ -326,11 +326,14 @@ export async function checkExpiredMemberships() {
       endDate: { $lte: currentDate },
     });
 
-    // Update status to expired for all expired memberships
+    // Update status and paymentStatus to expired for all expired memberships
     const updatePromises = expiredMemberships.map((membership) =>
       Membership.findByIdAndUpdate(
         membership._id,
-        { status: "expired" },
+        {
+          status: "expired",
+          paymentStatus: "expired",
+        },
         { new: true }
       )
     );
