@@ -1,13 +1,33 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema, model, models } from "mongoose";
 
-const transactionSchema = new mongoose.Schema(
+export interface ITransaction extends Document {
+  userId: string;
+  membershipId?: mongoose.Types.ObjectId;
+  reference: string;
+  amount: number;
+  status: "pending" | "success" | "failed" | "abandoned" | "timeout";
+  paymentMethod: string;
+  metadata: {
+    planId: mongoose.Types.ObjectId;
+    planName?: string;
+    paymentType: "new_subscription" | "renewal";
+    failureReason?: string;
+    abandonedAt?: Date;
+    timeoutAt?: Date;
+  };
+  paymentResponse?: any;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const transactionSchema = new Schema<ITransaction>(
   {
     userId: {
       type: String,
       required: true,
     },
     membershipId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Membership",
     },
     reference: {
@@ -30,7 +50,7 @@ const transactionSchema = new mongoose.Schema(
     },
     metadata: {
       planId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Plan",
         required: true,
       },
@@ -45,7 +65,7 @@ const transactionSchema = new mongoose.Schema(
       timeoutAt: Date,
     },
     paymentResponse: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
       default: null,
     },
   },
@@ -54,8 +74,9 @@ const transactionSchema = new mongoose.Schema(
   }
 );
 
+// Check if the model exists before creating a new one
+// This is important for Next.js with hot reloading and in serverless environments
 const Transaction =
-  mongoose.models.Transaction ||
-  mongoose.model("Transaction", transactionSchema);
+  models.Transaction || model<ITransaction>("Transaction", transactionSchema);
 
 export default Transaction;

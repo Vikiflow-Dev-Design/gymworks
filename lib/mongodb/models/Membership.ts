@@ -19,11 +19,6 @@ export interface IMembership extends Document {
   updatedAt: Date;
 }
 
-// Delete the existing model if it exists to prevent schema modification errors
-if (models.Membership) {
-  delete models.Membership;
-}
-
 const membershipSchema = new Schema<IMembership>(
   {
     userId: {
@@ -87,6 +82,9 @@ const membershipSchema = new Schema<IMembership>(
 // Create a compound index for userId and planId
 membershipSchema.index({ userId: 1, planId: 1 }, { unique: true });
 
-const Membership = model<IMembership>("Membership", membershipSchema);
+// Check if the model exists before creating a new one
+// This is important for Next.js with hot reloading and in serverless environments
+const Membership =
+  models.Membership || model<IMembership>("Membership", membershipSchema);
 
 export default Membership;

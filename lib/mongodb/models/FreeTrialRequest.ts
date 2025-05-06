@@ -1,6 +1,6 @@
-import { Schema, model, models } from "mongoose";
+import mongoose, { Document, Schema, model, models } from "mongoose";
 
-export interface IFreeTrialRequest {
+export interface IFreeTrialRequest extends Document {
   firstName: string;
   lastName: string;
   email: string;
@@ -48,7 +48,10 @@ const freeTrialRequestSchema = new Schema<IFreeTrialRequest>(
 freeTrialRequestSchema.index({ email: 1 });
 freeTrialRequestSchema.index({ createdAt: -1 });
 
+// Check if the model exists before creating a new one
+// This is important for Next.js with hot reloading and in serverless environments
 const FreeTrialRequest =
-  models.FreeTrialRequest || model("FreeTrialRequest", freeTrialRequestSchema);
+  models.FreeTrialRequest ||
+  model<IFreeTrialRequest>("FreeTrialRequest", freeTrialRequestSchema);
 
 export default FreeTrialRequest;

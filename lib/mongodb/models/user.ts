@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema, model, models } from "mongoose";
 
 export interface IUser extends Document {
   clerkId: string;
@@ -17,7 +17,7 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema<IUser>(
   {
     clerkId: {
       type: String,
@@ -72,6 +72,8 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const User = mongoose.models.User || mongoose.model<IUser>("User", userSchema);
+// Check if the model exists before creating a new one
+// This is important for Next.js with hot reloading and in serverless environments
+const User = models.User || model<IUser>("User", userSchema);
 
 export default User;
