@@ -375,11 +375,19 @@ export async function getMembershipById(membershipId: string) {
       };
     }
 
-    // Get user data
-    const User = mongoose.models.User;
-    const user = await User.findOne({
-      clerkId: membership.userId,
-    }).lean();
+    // Safely get user data
+    let user = null;
+    try {
+      // Dynamically import the User model to ensure it's loaded
+      const UserModel = (await import("@/lib/mongodb/models/user")).default;
+
+      user = await UserModel.findOne({
+        clerkId: membership.userId,
+      }).lean();
+    } catch (err) {
+      console.error("Error fetching user:", err);
+      // Continue with null user if there's an error
+    }
 
     // Enhance membership with user data
     const enhancedMembership = {
@@ -436,11 +444,26 @@ export async function getAllMemberships(page: number = 1, limit: number = 20) {
     // Get all unique user IDs from the memberships
     const userIds = [...new Set(memberships.map((m) => m.userId))];
 
-    // Fetch all users in one query
-    const User = mongoose.models.User;
-    const users = await User.find({
-      clerkId: { $in: userIds },
-    }).lean();
+    // Safely import the User model
+    let users: Array<{
+      clerkId: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      [key: string]: any;
+    }> = [];
+    try {
+      // Dynamically import the User model to ensure it's loaded
+      const UserModel = (await import("@/lib/mongodb/models/user")).default;
+
+      // Fetch all users in one query
+      users = await UserModel.find({
+        clerkId: { $in: userIds },
+      }).lean();
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      // Continue with empty users array if there's an error
+    }
 
     // Create a map of user data by clerkId for quick lookup
     const userMap = users.reduce((map, user) => {

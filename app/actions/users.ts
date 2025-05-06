@@ -2,7 +2,6 @@
 
 import { connect } from "@/lib/mongodb/connectDB";
 import Membership from "@/lib/mongodb/models/Membership";
-import User from "@/lib/mongodb/models/user";
 import { User as UserType } from "@/types/user";
 
 interface EmailAddress {
@@ -22,7 +21,10 @@ export const createOrUpdateUser = async (
 
     const userEmail = email_addresses[0].email_address;
 
-    const user = await User.findOneAndUpdate(
+    // Dynamically import the User model
+    const UserModel = (await import("@/lib/mongodb/models/user")).default;
+
+    const user = await UserModel.findOneAndUpdate(
       { clerkId: id },
       {
         clerkId: id,
@@ -51,7 +53,11 @@ export const createOrUpdateUser = async (
 export async function getUsers(): Promise<{ users: UserType[] }> {
   try {
     await connect();
-    const users = await User.find({}).lean();
+
+    // Dynamically import the User model
+    const UserModel = (await import("@/lib/mongodb/models/user")).default;
+
+    const users = await UserModel.find({}).lean();
 
     const transformedUsers = users.map((user: any) => ({
       id: user._id.toString(),
@@ -78,7 +84,11 @@ export async function getUsers(): Promise<{ users: UserType[] }> {
 export async function getUserById(userId: string) {
   try {
     await connect();
-    const user = await User.findById(userId).lean();
+
+    // Dynamically import the User model
+    const UserModel = (await import("@/lib/mongodb/models/user")).default;
+
+    const user = await UserModel.findById(userId).lean();
 
     if (!user) {
       return null;
@@ -111,10 +121,13 @@ export async function getDashboardStats() {
   try {
     await connect();
 
+    // Dynamically import the User model
+    const UserModel = (await import("@/lib/mongodb/models/user")).default;
+
     const [totalUsers, activeMembers, trialUsers] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ membershipStatus: "active" }),
-      User.countDocuments({ membershipStatus: "trial" }),
+      UserModel.countDocuments(),
+      UserModel.countDocuments({ membershipStatus: "active" }),
+      UserModel.countDocuments({ membershipStatus: "trial" }),
     ]);
 
     return {
@@ -141,15 +154,18 @@ export async function updateUserRole(
   try {
     await connect();
 
+    // Dynamically import the User model
+    const UserModel = (await import("@/lib/mongodb/models/user")).default;
+
     // Check if current user is admin
-    const currentUser = await User.findOne({ email: currentUserEmail });
+    const currentUser = await UserModel.findOne({ email: currentUserEmail });
 
     if (!currentUser || currentUser.role !== "admin") {
       throw new Error("Unauthorized: Only admins can modify user roles");
     }
 
     // Find target user to get their Clerk ID
-    const targetUser = await User.findOne({ email: targetUserEmail });
+    const targetUser = await UserModel.findOne({ email: targetUserEmail });
 
     if (!targetUser) {
       throw new Error("Target user not found");
@@ -191,8 +207,11 @@ export async function deleteUser(clerkId: string) {
   try {
     await connect();
 
+    // Dynamically import the User model
+    const UserModel = (await import("@/lib/mongodb/models/user")).default;
+
     // Find user to get their MongoDB ID
-    const user = await User.findOne({ clerkId });
+    const user = await UserModel.findOne({ clerkId });
     if (!user) {
       throw new Error("User not found");
     }
@@ -201,7 +220,7 @@ export async function deleteUser(clerkId: string) {
     await Membership.deleteMany({ userId: clerkId });
 
     // Delete user from MongoDB
-    await User.findOneAndDelete({ clerkId });
+    await UserModel.findOneAndDelete({ clerkId });
 
     return { success: true, message: "User deleted successfully" };
   } catch (error) {
