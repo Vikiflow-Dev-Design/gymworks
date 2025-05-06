@@ -143,7 +143,7 @@ export async function getDashboardStats() {
 }
 
 export async function updateUserRole(
-  currentUserEmail: string,
+  _currentUserEmail: string, // Unused parameter but kept for backward compatibility
   targetUserEmail: string,
   role: "admin" | "user"
 ) {
@@ -152,34 +152,45 @@ export async function updateUserRole(
   }
 
   try {
-    await connect();
+    // Import Clerk client and auth
+    const { clerkClient, auth } = await import("@clerk/nextjs/server");
+    const clerk = await clerkClient();
 
-    // Dynamically import the User model
-    const UserModel = (await import("@/lib/mongodb/models/user")).default;
+    // Check if current user is admin using Clerk session claims
+    const { sessionClaims } = await auth();
+    const isAdmin = sessionClaims?.metadata?.role === "admin";
 
-    // Check if current user is admin
-    const currentUser = await UserModel.findOne({ email: currentUserEmail });
-
-    if (!currentUser || currentUser.role !== "admin") {
+    if (!isAdmin) {
       throw new Error("Unauthorized: Only admins can modify user roles");
     }
 
-    // Find target user to get their Clerk ID
-    const targetUser = await UserModel.findOne({ email: targetUserEmail });
+    // Find target user in Clerk by email
+    const targetUsersResponse = await clerk.users.getUserList({
+      emailAddress: [targetUserEmail],
+    });
 
-    if (!targetUser) {
+    const targetUsers = targetUsersResponse.data;
+
+    if (!targetUsers || targetUsers.length === 0) {
       throw new Error("Target user not found");
     }
 
-    // Update user's role in Clerk's public metadata
-    const { clerkClient } = await import("@clerk/nextjs/server");
-    const clerk = await clerkClient();
+    const targetUser = targetUsers[0];
 
-    await clerk.users.updateUserMetadata(targetUser.clerkId, {
+    // Update user's role in Clerk's public metadata
+    await clerk.users.updateUserMetadata(targetUser.id, {
       publicMetadata: {
         role,
       },
     });
+
+    // Optionally update MongoDB user role to keep them in sync
+    await connect();
+    const UserModel = (await import("@/lib/mongodb/models/user")).default;
+    await UserModel.findOneAndUpdate(
+      { email: targetUserEmail },
+      { role: role }
+    );
 
     return {
       success: true,

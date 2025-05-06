@@ -9,14 +9,10 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { updateUserRole } from "@/app/actions/users";
-import { useUser } from "@clerk/nextjs";
 
 export default function RoleManagement() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useUser();
-
-  console.log(user);
 
   const handleRoleUpdate = async (newRole: "admin" | "user") => {
     if (!email) {
@@ -26,11 +22,8 @@ export default function RoleManagement() {
 
     try {
       setIsLoading(true);
-      if (!user?.emailAddresses?.[0]?.emailAddress) {
-        throw new Error("Current user email not found");
-      }
-      const currentUserEmail = user.emailAddresses[0].emailAddress;
-      const result = await updateUserRole(currentUserEmail, email, newRole);
+      // We no longer need to pass the current user's email since we're using Clerk's auth directly
+      const result = await updateUserRole("", email, newRole);
       toast.success(result.message);
       setEmail("");
     } catch (error) {
