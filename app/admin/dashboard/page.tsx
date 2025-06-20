@@ -17,6 +17,7 @@ import {
   Calendar,
   Dumbbell,
   Bell,
+  Clock,
 } from "lucide-react";
 import type { User } from "@/types/user";
 import type { DashboardStats } from "@/data/dashboard";
@@ -257,6 +258,11 @@ export default function AdminDashboard() {
             <Link href="/admin/dashboard/memberships">
               <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
                 <CreditCard className="w-4 h-4 mr-2" /> Manage Memberships
+              </Button>
+            </Link>
+            <Link href="/admin/test-expiration">
+              <Button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white">
+                <Clock className="w-4 h-4 mr-2" /> Test Expiration
               </Button>
             </Link>
             {/* <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
